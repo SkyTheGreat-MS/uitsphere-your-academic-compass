@@ -1,0 +1,233 @@
+export interface LostFoundItem {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  status: "Lost" | "Found" | "Claimed";
+  category: string;
+  image: string;
+  reporter: string;
+}
+
+const img = (seed: string) => `https://picsum.photos/seed/${seed}/640/420`;
+
+export const lostItems: LostFoundItem[] = [
+  {
+    id: "l1",
+    title: "Black laptop sleeve (15\")",
+    description: "Padded sleeve with a small enamel pin of a rocket on the front pocket. Contains a USB-C charger.",
+    location: "Library, Level 3 quiet zone",
+    date: "10 Mar 2025",
+    status: "Lost",
+    category: "Electronics",
+    image: img("uit-sleeve"),
+    reporter: "Amara O.",
+  },
+  {
+    id: "l2",
+    title: "Student ID card — J. Feretti",
+    description: "University ID card, blue lanyard attached, slight crack in the top-right corner.",
+    location: "Block C corridor",
+    date: "09 Mar 2025",
+    status: "Lost",
+    category: "Documents",
+    image: img("uit-idcard"),
+    reporter: "Jonah F.",
+  },
+  {
+    id: "l3",
+    title: "Silver water bottle",
+    description: "Insulated 750 ml bottle covered in climbing club stickers.",
+    location: "Sports Centre changing rooms",
+    date: "08 Mar 2025",
+    status: "Lost",
+    category: "Personal",
+    image: img("uit-bottle"),
+    reporter: "Priya N.",
+  },
+  {
+    id: "l4",
+    title: "Scientific calculator",
+    description: "Casio fx-991EX with initials 'M.T.' written in marker on the back cover.",
+    location: "Maths Hall, room 12",
+    date: "07 Mar 2025",
+    status: "Lost",
+    category: "Academic",
+    image: img("uit-calc"),
+    reporter: "Mateo T.",
+  },
+];
+
+export const foundItems: LostFoundItem[] = [
+  {
+    id: "fi1",
+    title: "Set of keys with green fob",
+    description: "Three keys on a ring with a green rubber fob and a small bicycle key.",
+    location: "Handed in at Main Reception",
+    date: "10 Mar 2025",
+    status: "Found",
+    category: "Personal",
+    image: img("uit-keys"),
+    reporter: "Reception desk",
+  },
+  {
+    id: "fi2",
+    title: "Wireless earbuds case",
+    description: "White charging case, no earbuds inside, small scratch on the lid.",
+    location: "AI Lab 3",
+    date: "09 Mar 2025",
+    status: "Found",
+    category: "Electronics",
+    image: img("uit-earbuds"),
+    reporter: "Lab technician",
+  },
+  {
+    id: "fi3",
+    title: "Navy hoodie, size M",
+    description: "University-branded hoodie left on a chair after the evening seminar.",
+    location: "Humanities Building, room 07",
+    date: "08 Mar 2025",
+    status: "Claimed",
+    category: "Clothing",
+    image: img("uit-hoodie"),
+    reporter: "Security office",
+  },
+  {
+    id: "fi4",
+    title: "Spiral notebook — Linear Algebra",
+    description: "A4 notebook full of handwritten matrix notes, name partially rubbed out.",
+    location: "Café Terrace",
+    date: "06 Mar 2025",
+    status: "Found",
+    category: "Academic",
+    image: img("uit-notebook"),
+    reporter: "Café staff",
+  },
+];
+
+export interface MatchSuggestion {
+  id: string;
+  lostTitle: string;
+  foundTitle: string;
+  confidence: number;
+  reason: string;
+}
+
+export const matchSuggestions: MatchSuggestion[] = [
+  {
+    id: "ms1",
+    lostTitle: "Black laptop sleeve (15\")",
+    foundTitle: "Padded sleeve handed in at Library desk",
+    confidence: 92,
+    reason: "Same building, matching size and colour, reported within 4 hours.",
+  },
+  {
+    id: "ms2",
+    lostTitle: "Scientific calculator",
+    foundTitle: "Casio calculator found in Maths Hall",
+    confidence: 78,
+    reason: "Identical model and location; initials not yet verified.",
+  },
+];
+
+export const lostFoundCategories = ["All", "Electronics", "Documents", "Academic", "Personal", "Clothing"];
+
+export interface Announcement {
+  id: string;
+  category: "Academic" | "Events" | "Campus" | "Exams" | "Clubs";
+  title: string;
+  description: string;
+  date: string;
+  pinned: boolean;
+  author: string;
+}
+
+export const announcements: Announcement[] = [
+  {
+    id: "an1",
+    category: "Exams",
+    title: "Semester 2 exam timetable published",
+    description:
+      "Provisional exam dates for all Year 3 modules are now available in the student portal. Clash reports must be submitted before 20 March.",
+    date: "11 Mar 2025",
+    pinned: true,
+    author: "Registry Office",
+  },
+  {
+    id: "an2",
+    category: "Academic",
+    title: "Distributed Systems coursework deadline extended",
+    description:
+      "Following the lab outage on Tuesday, the consensus protocols report deadline moves to Friday 14 March, 17:00.",
+    date: "10 Mar 2025",
+    pinned: true,
+    author: "Dr. H. Lindqvist",
+  },
+  {
+    id: "an3",
+    category: "Events",
+    title: "Spring Innovation Fair — call for demos",
+    description:
+      "Showcase your project to 40+ industry partners. Applications close Sunday; teams of up to four students welcome.",
+    date: "09 Mar 2025",
+    pinned: false,
+    author: "Careers & Enterprise",
+  },
+  {
+    id: "an4",
+    category: "Campus",
+    title: "Library extended opening hours begin Monday",
+    description:
+      "Levels 2 and 3 will stay open until 02:00 throughout the revision period. Bring your student ID for after-hours access.",
+    date: "08 Mar 2025",
+    pinned: false,
+    author: "Library Services",
+  },
+  {
+    id: "an5",
+    category: "Clubs",
+    title: "AI Society: hands-on workshop on retrieval systems",
+    description:
+      "Thursday 18:00 in AI Lab 3. Bring a laptop — we'll build a small retrieval pipeline together. Free pizza afterwards.",
+    date: "07 Mar 2025",
+    pinned: false,
+    author: "AI Society",
+  },
+  {
+    id: "an6",
+    category: "Academic",
+    title: "New peer tutoring slots for Linear Algebra II",
+    description:
+      "Six additional weekly slots have opened with senior students. Book through the study support page.",
+    date: "05 Mar 2025",
+    pinned: false,
+    author: "Study Support",
+  },
+];
+
+export const announcementCategories = ["All", "Academic", "Exams", "Events", "Campus", "Clubs"];
+
+export const achievements = [
+  { id: "ac1", title: "18-day streak", description: "Studied every day for 18 days", icon: "flame" },
+  { id: "ac2", title: "Quiz master", description: "Scored above 85% on five quizzes", icon: "trophy" },
+  { id: "ac3", title: "Deep focus", description: "Logged a 4-hour uninterrupted session", icon: "target" },
+  { id: "ac4", title: "Note architect", description: "Generated 50 smart note cards", icon: "notebook" },
+  { id: "ac5", title: "Early bird", description: "Ten sessions started before 08:00", icon: "sunrise" },
+  { id: "ac6", title: "Helper", description: "Returned 3 lost items to their owners", icon: "heart" },
+];
+
+export const profileActivity = [
+  { id: "pa1", label: "Completed mock exam — Distributed Systems", when: "Today, 09:40", detail: "84%" },
+  { id: "pa2", label: "Reviewed 32 flashcards", when: "Today, 08:05", detail: "Linear Algebra II" },
+  { id: "pa3", label: "Uploaded ML Week 6 slides", when: "Yesterday, 19:22", detail: "58 pages" },
+  { id: "pa4", label: "Reported a found item", when: "Yesterday, 13:10", detail: "Lost & Found" },
+  { id: "pa5", label: "Finished study goal — matrix decompositions", when: "2 days ago", detail: "7 / 8 h" },
+];
+
+export const notifications = [
+  { id: "nt1", title: "Coursework deadline moved", body: "Consensus report now due Friday 17:00", when: "12m" },
+  { id: "nt2", title: "Possible match found", body: "Your laptop sleeve may have been handed in", when: "1h" },
+  { id: "nt3", title: "Study streak at risk", body: "Log 20 minutes today to keep your 18-day streak", when: "3h" },
+  { id: "nt4", title: "Quiz results ready", body: "Optimisation quiz — 86% (+5 vs last week)", when: "Yesterday" },
+];
