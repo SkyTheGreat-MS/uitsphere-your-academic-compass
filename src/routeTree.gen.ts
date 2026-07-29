@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const TimetableRoute = TimetableRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlannerRoute = PlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/planner': typeof PlannerRoute
   '/register': typeof RegisterRoute
   '/timetable': typeof TimetableRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/planner': typeof PlannerRoute
   '/register': typeof RegisterRoute
   '/timetable': typeof TimetableRoute
 }
@@ -60,21 +68,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/planner': typeof PlannerRoute
   '/register': typeof RegisterRoute
   '/timetable': typeof TimetableRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/onboarding' | '/register' | '/timetable'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/onboarding'
+    | '/planner'
+    | '/register'
+    | '/timetable'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/onboarding' | '/register' | '/timetable'
-  id: '__root__' | '/' | '/login' | '/onboarding' | '/register' | '/timetable'
+  to: '/' | '/login' | '/onboarding' | '/planner' | '/register' | '/timetable'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/onboarding'
+    | '/planner'
+    | '/register'
+    | '/timetable'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  PlannerRoute: typeof PlannerRoute
   RegisterRoute: typeof RegisterRoute
   TimetableRoute: typeof TimetableRoute
 }
@@ -93,6 +116,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planner': {
+      id: '/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof PlannerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -123,6 +153,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  PlannerRoute: PlannerRoute,
   RegisterRoute: RegisterRoute,
   TimetableRoute: TimetableRoute,
 }
