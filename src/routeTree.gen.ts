@@ -13,6 +13,7 @@ import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LostFoundRouteImport } from './routes/lost-found'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -36,6 +37,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LostFoundRoute = LostFoundRouteImport.update({
+  id: '/lost-found',
+  path: '/lost-found',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -50,6 +56,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/lost-found': typeof LostFoundRoute
   '/onboarding': typeof OnboardingRoute
   '/planner': typeof PlannerRoute
   '/register': typeof RegisterRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/lost-found': typeof LostFoundRoute
   '/onboarding': typeof OnboardingRoute
   '/planner': typeof PlannerRoute
   '/register': typeof RegisterRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/lost-found': typeof LostFoundRoute
   '/onboarding': typeof OnboardingRoute
   '/planner': typeof PlannerRoute
   '/register': typeof RegisterRoute
@@ -77,16 +86,25 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/lost-found'
     | '/onboarding'
     | '/planner'
     | '/register'
     | '/timetable'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/onboarding' | '/planner' | '/register' | '/timetable'
+  to:
+    | '/'
+    | '/login'
+    | '/lost-found'
+    | '/onboarding'
+    | '/planner'
+    | '/register'
+    | '/timetable'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/lost-found'
     | '/onboarding'
     | '/planner'
     | '/register'
@@ -96,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  LostFoundRoute: typeof LostFoundRoute
   OnboardingRoute: typeof OnboardingRoute
   PlannerRoute: typeof PlannerRoute
   RegisterRoute: typeof RegisterRoute
@@ -132,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lost-found': {
+      id: '/lost-found'
+      path: '/lost-found'
+      fullPath: '/lost-found'
+      preLoaderRoute: typeof LostFoundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -152,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  LostFoundRoute: LostFoundRoute,
   OnboardingRoute: OnboardingRoute,
   PlannerRoute: PlannerRoute,
   RegisterRoute: RegisterRoute,
