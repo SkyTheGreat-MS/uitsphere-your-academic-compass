@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LostFoundRouteImport } from './routes/lost-found'
@@ -26,6 +27,11 @@ const TimetableRoute = TimetableRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlannerRoute = PlannerRouteImport.update({
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/lost-found': typeof LostFoundRoute
   '/onboarding': typeof OnboardingRoute
   '/planner': typeof PlannerRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/timetable': typeof TimetableRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/lost-found': typeof LostFoundRoute
   '/onboarding': typeof OnboardingRoute
   '/planner': typeof PlannerRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/timetable': typeof TimetableRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/lost-found': typeof LostFoundRoute
   '/onboarding': typeof OnboardingRoute
   '/planner': typeof PlannerRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/timetable': typeof TimetableRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/lost-found'
     | '/onboarding'
     | '/planner'
+    | '/profile'
     | '/register'
     | '/timetable'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/lost-found'
     | '/onboarding'
     | '/planner'
+    | '/profile'
     | '/register'
     | '/timetable'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/lost-found'
     | '/onboarding'
     | '/planner'
+    | '/profile'
     | '/register'
     | '/timetable'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   LostFoundRoute: typeof LostFoundRoute
   OnboardingRoute: typeof OnboardingRoute
   PlannerRoute: typeof PlannerRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   TimetableRoute: typeof TimetableRoute
 }
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planner': {
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   LostFoundRoute: LostFoundRoute,
   OnboardingRoute: OnboardingRoute,
   PlannerRoute: PlannerRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   TimetableRoute: TimetableRoute,
 }
