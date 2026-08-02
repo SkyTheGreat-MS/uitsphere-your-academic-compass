@@ -10,10 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create your account — UitSphere" },
-      { name: "description", content: "Join UitSphere and organise lectures, deadlines and AI-powered revision in one calm workspace." },
-      { property: "og:title", content: "Create your account — UitSphere" },
-      { property: "og:description", content: "Join UitSphere, the AI-powered university student companion platform." },
+      { title: "Create your account — Ma-Haw-Tha-Dar" },
+      { name: "description", content: "Join Ma-Haw-Tha-Dar and organise lectures, deadlines and AI-powered revision in one calm workspace." },
+      { property: "og:title", content: "Create your account — Ma-Haw-Tha-Dar" },
+      { property: "og:description", content: "Join Ma-Haw-Tha-Dar, the AI-powered university student companion platform." },
     ],
   }),
   component: RegisterPage,
@@ -55,7 +55,7 @@ function RegisterPage() {
           <Label htmlFor="email">University email</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="email" type="email" placeholder="you@uitsphere.edu" className="h-11 rounded-xl pl-9" />
+            <Input id="email" type="email" placeholder="you@mahawthadar.edu" className="h-11 rounded-xl pl-9" />
           </div>
         </div>
 
@@ -79,7 +79,7 @@ function RegisterPage() {
         <label className="flex items-start gap-2 text-sm text-muted-foreground">
           <Checkbox defaultChecked className="mt-0.5" />
           <span>
-            I agree to the university acceptable-use policy and UitSphere terms of service.
+            I agree to the university acceptable-use policy and Ma-Haw-Tha-Dar terms of service.
           </span>
         </label>
 

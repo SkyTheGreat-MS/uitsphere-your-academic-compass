@@ -11,9 +11,9 @@ import { Separator } from "@/components/ui/separator";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — UitSphere Student Companion" },
-      { name: "description", content: "Sign in to UitSphere to access your timetable, AI Learning Studio and study planner." },
-      { property: "og:title", content: "Sign in — UitSphere" },
+      { title: "Sign in — Ma-Haw-Tha-Dar Student Companion" },
+      { name: "description", content: "Sign in to Ma-Haw-Tha-Dar to access your timetable, AI Learning Studio and study planner." },
+      { property: "og:title", content: "Sign in — Ma-Haw-Tha-Dar" },
       { property: "og:description", content: "Access your university dashboard, AI study tools and campus updates." },
     ],
   }),
@@ -29,7 +29,7 @@ function LoginPage() {
       subtitle="Sign in with your university account to continue studying."
       footer={
         <>
-          New to UitSphere?{" "}
+          New to Ma-Haw-Tha-Dar?{" "}
           <Link to="/register" className="font-semibold text-primary hover:underline">
             Create an account
           </Link>
@@ -48,7 +48,7 @@ function LoginPage() {
           <Label htmlFor="email">University email</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="email" type="email" defaultValue="amara.okonkwo@uitsphere.edu" className="h-11 rounded-xl pl-9" />
+            <Input id="email" type="email" defaultValue="amara.okonkwo@mahawthadar.edu" className="h-11 rounded-xl pl-9" />
           </div>
         </div>
 
@@ -56,7 +56,7 @@ function LoginPage() {
           <Label htmlFor="password">Password</Label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="password" type="password" defaultValue="uitsphere" className="h-11 rounded-xl pl-9" />
+            <Input id="password" type="password" defaultValue="mahawthadar" className="h-11 rounded-xl pl-9" />
           </div>
         </div>
 
