@@ -20,7 +20,7 @@ export const currentStudent: Student = {
   id: "stu_10294",
   name: "Amara Okonkwo",
   email: "amara.okonkwo@mahawthadar.edu",
-  universityId: "UIT-2023-10294",
+  universityId: "TNT-2361",
   department: "Computer Science & Engineering",
   academicYear: "Year 3 · Semester 2",
   university: "University of Innovation & Technology",
@@ -38,11 +38,11 @@ export interface Subject {
 }
 
 export const subjects: Subject[] = [
-  { id: "sub_1", code: "CS3021", name: "Distributed Systems", lecturer: "Dr. H. Lindqvist", colorToken: "chart-1" },
-  { id: "sub_2", code: "CS3105", name: "Machine Learning", lecturer: "Prof. N. Adeyemi", colorToken: "chart-2" },
-  { id: "sub_3", code: "MA2210", name: "Linear Algebra II", lecturer: "Dr. P. Moreau", colorToken: "chart-3" },
-  { id: "sub_4", code: "CS3300", name: "Database Engineering", lecturer: "Dr. S. Yamada", colorToken: "chart-4" },
-  { id: "sub_5", code: "HU1050", name: "Technology & Ethics", lecturer: "Dr. R. Castillo", colorToken: "chart-5" },
+  { id: "sub_1", code: "CST-4403", name: "Distributed Systems", lecturer: "Dr. H. Lindqvist", colorToken: "chart-1" },
+  { id: "sub_2", code: "CST-4412", name: "Machine Learning", lecturer: "Prof. N. Adeyemi", colorToken: "chart-2" },
+  { id: "sub_3", code: "MAT-3305", name: "Linear Algebra II", lecturer: "Dr. P. Moreau", colorToken: "chart-3" },
+  { id: "sub_4", code: "CST-4420", name: "Database Engineering", lecturer: "Dr. S. Yamada", colorToken: "chart-4" },
+  { id: "sub_5", code: "HUM-2210", name: "Technology & Ethics", lecturer: "Dr. R. Castillo", colorToken: "chart-5" },
 ];
 
 export interface ClassSession {
