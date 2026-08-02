@@ -79,12 +79,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "UitSphere — AI university student companion" },
+      { title: "Ma-Haw-Tha-Dar — AI university student companion" },
       {
         name: "description",
-        content: "UitSphere helps university students organise classes, deadlines and AI-powered revision in one calm workspace.",
+        content: "Ma-Haw-Tha-Dar helps university students organise classes, deadlines and AI-powered revision in one calm workspace.",
       },
-      { property: "og:title", content: "UitSphere — AI university student companion" },
+      { property: "og:title", content: "Ma-Haw-Tha-Dar — AI university student companion" },
       {
         property: "og:description",
         content: "Timetable, study planner, campus tools and an AI Learning Studio for university students.",
