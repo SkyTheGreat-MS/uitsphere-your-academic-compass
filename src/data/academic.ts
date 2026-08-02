@@ -19,7 +19,7 @@ export interface Student {
 export const currentStudent: Student = {
   id: "stu_10294",
   name: "Amara Okonkwo",
-  email: "amara.okonkwo@uitsphere.edu",
+  email: "amara.okonkwo@mahawthadar.edu",
   universityId: "UIT-2023-10294",
   department: "Computer Science & Engineering",
   academicYear: "Year 3 · Semester 2",
