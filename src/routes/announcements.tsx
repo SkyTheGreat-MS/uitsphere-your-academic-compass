@@ -14,9 +14,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/announcements")({
   head: () => ({
     meta: [
-      { title: "Campus announcements — UitSphere" },
+      { title: "Campus announcements — Ma-Haw-Tha-Dar" },
       { name: "description", content: "Exam notices, coursework changes, events and campus updates in one filterable feed." },
-      { property: "og:title", content: "Campus announcements — UitSphere" },
+      { property: "og:title", content: "Campus announcements — Ma-Haw-Tha-Dar" },
       { property: "og:description", content: "Stay on top of exams, deadlines and campus events." },
     ],
   }),

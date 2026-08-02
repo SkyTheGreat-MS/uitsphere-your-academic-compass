@@ -20,10 +20,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Student profile setup — UitSphere" },
-      { name: "description", content: "Tell UitSphere about your department and academic year so your dashboard and AI tools are tailored to you." },
-      { property: "og:title", content: "Student profile setup — UitSphere" },
-      { property: "og:description", content: "Personalise your UitSphere workspace in three quick steps." },
+      { title: "Student profile setup — Ma-Haw-Tha-Dar" },
+      { name: "description", content: "Tell Ma-Haw-Tha-Dar about your department and academic year so your dashboard and AI tools are tailored to you." },
+      { property: "og:title", content: "Student profile setup — Ma-Haw-Tha-Dar" },
+      { property: "og:description", content: "Personalise your Ma-Haw-Tha-Dar workspace in three quick steps." },
     ],
   }),
   component: OnboardingPage,
@@ -74,11 +74,11 @@ function OnboardingPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="o-email">University email</Label>
-              <Input id="o-email" type="email" defaultValue="amara.okonkwo@uitsphere.edu" className="h-11 rounded-xl" />
+              <Input id="o-email" type="email" defaultValue="amara.okonkwo@mahawthadar.edu" className="h-11 rounded-xl" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="o-pass">Password</Label>
-              <Input id="o-pass" type="password" defaultValue="uitsphere" className="h-11 rounded-xl" />
+              <Input id="o-pass" type="password" defaultValue="mahawthadar" className="h-11 rounded-xl" />
             </div>
           </div>
         )}

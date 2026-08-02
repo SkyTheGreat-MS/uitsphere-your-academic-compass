@@ -45,13 +45,13 @@ import { recentAiActivity } from "@/data/studio";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — UitSphere Student Companion" },
+      { title: "Dashboard — Ma-Haw-Tha-Dar Student Companion" },
       {
         name: "description",
         content:
           "Your personalised university dashboard: today's classes, upcoming deadlines, study progress and AI learning activity.",
       },
-      { property: "og:title", content: "Dashboard — UitSphere" },
+      { property: "og:title", content: "Dashboard — Ma-Haw-Tha-Dar" },
       {
         property: "og:description",
         content: "Classes, deadlines, study analytics and AI tools for university students in one calm workspace.",
@@ -360,7 +360,7 @@ function DashboardPage() {
 
         <Card className="rounded-2xl border-dashed p-5 text-center shadow-none">
           <p className="text-sm text-muted-foreground">
-            All data on this dashboard is illustrative sample data for the UitSphere prototype.
+            All data on this dashboard is illustrative sample data for the Ma-Haw-Tha-Dar prototype.
           </p>
         </Card>
       </div>

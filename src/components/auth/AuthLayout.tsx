@@ -36,7 +36,7 @@ export function AuthLayout({
           <span className="grid size-11 place-items-center rounded-xl bg-primary-foreground/15">
             <GraduationCap className="size-6" />
           </span>
-          <span className="font-display text-xl font-bold">UitSphere</span>
+          <span className="font-display text-xl font-bold">Ma-Haw-Tha-Dar</span>
         </Link>
 
         <div className="relative max-w-md">
@@ -44,7 +44,7 @@ export function AuthLayout({
             Your whole degree, organised and understood.
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-primary-foreground/80">
-            UitSphere brings your lectures, deadlines and AI study tools together so you can spend less time managing
+            Ma-Haw-Tha-Dar brings your lectures, deadlines and AI study tools together so you can spend less time managing
             university and more time actually learning.
           </p>
 
@@ -85,7 +85,7 @@ export function AuthLayout({
             <span className="grid size-9 place-items-center rounded-xl gradient-brand text-primary-foreground">
               <GraduationCap className="size-5" />
             </span>
-            <span className="font-display text-lg font-bold">UitSphere</span>
+            <span className="font-display text-lg font-bold">Ma-Haw-Tha-Dar</span>
           </Link>
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>

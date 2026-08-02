@@ -51,13 +51,13 @@ import {
 export const Route = createFileRoute("/studio")({
   head: () => ({
     meta: [
-      { title: "AI Learning Studio — UitSphere" },
+      { title: "AI Learning Studio — Ma-Haw-Tha-Dar" },
       {
         name: "description",
         content:
           "Turn lecture materials into AI tutoring, summaries, smart notes, flashcards, quizzes and full mock exams.",
       },
-      { property: "og:title", content: "AI Learning Studio — UitSphere" },
+      { property: "og:title", content: "AI Learning Studio — Ma-Haw-Tha-Dar" },
       { property: "og:description", content: "Your AI-powered study workspace for university lectures and revision." },
     ],
   }),

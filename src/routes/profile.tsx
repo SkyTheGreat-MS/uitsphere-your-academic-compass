@@ -32,10 +32,10 @@ import { achievements, profileActivity } from "@/data/campus";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Student profile — UitSphere" },
+      { title: "Student profile — Ma-Haw-Tha-Dar" },
       { name: "description", content: "Manage your student details, view achievements, study statistics and recent learning activity." },
-      { property: "og:title", content: "Student profile — UitSphere" },
-      { property: "og:description", content: "Achievements, study stats and settings for your UitSphere account." },
+      { property: "og:title", content: "Student profile — Ma-Haw-Tha-Dar" },
+      { property: "og:description", content: "Achievements, study stats and settings for your Ma-Haw-Tha-Dar account." },
     ],
   }),
   component: ProfilePage,
@@ -46,7 +46,7 @@ const iconMap = { flame: Flame, trophy: Trophy, target: Target, notebook: Notebo
 function ProfilePage() {
   return (
     <AppShell>
-      <PageHeader title="Profile" description="Your UitSphere student account" />
+      <PageHeader title="Profile" description="Your Ma-Haw-Tha-Dar student account" />
 
       <Card className="relative gap-0 overflow-hidden rounded-3xl border-border p-0 shadow-soft">
         <div className="h-28 gradient-brand" />

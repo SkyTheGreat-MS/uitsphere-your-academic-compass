@@ -25,9 +25,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/lost-found")({
   head: () => ({
     meta: [
-      { title: "Campus Lost & Found — UitSphere" },
+      { title: "Campus Lost & Found — Ma-Haw-Tha-Dar" },
       { name: "description", content: "Report and browse lost or found items across campus, with smart matching suggestions." },
-      { property: "og:title", content: "Campus Lost & Found — UitSphere" },
+      { property: "og:title", content: "Campus Lost & Found — Ma-Haw-Tha-Dar" },
       { property: "og:description", content: "A modern lost and found board for university students." },
     ],
   }),

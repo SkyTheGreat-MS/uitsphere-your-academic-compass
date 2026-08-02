@@ -11,9 +11,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/timetable")({
   head: () => ({
     meta: [
-      { title: "Weekly timetable — UitSphere" },
+      { title: "Weekly timetable — Ma-Haw-Tha-Dar" },
       { name: "description", content: "See your weekly university timetable with subject colours, rooms and lecture times." },
-      { property: "og:title", content: "Weekly timetable — UitSphere" },
+      { property: "og:title", content: "Weekly timetable — Ma-Haw-Tha-Dar" },
       { property: "og:description", content: "A calm weekly calendar of lectures, labs, seminars and tutorials." },
     ],
   }),

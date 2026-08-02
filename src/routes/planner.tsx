@@ -39,9 +39,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/planner")({
   head: () => ({
     meta: [
-      { title: "Study planner & analytics — UitSphere" },
+      { title: "Study planner & analytics — Ma-Haw-Tha-Dar" },
       { name: "description", content: "Track study goals, tasks, streaks and revision analytics across all your university modules." },
-      { property: "og:title", content: "Study planner — UitSphere" },
+      { property: "og:title", content: "Study planner — Ma-Haw-Tha-Dar" },
       { property: "og:description", content: "Goals, task cards and study analytics that keep your semester on track." },
     ],
   }),
