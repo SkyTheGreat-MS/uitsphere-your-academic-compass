@@ -86,8 +86,8 @@ function OnboardingPage() {
         {step === 1 && (
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="o-uid">University ID</Label>
-              <Input id="o-uid" defaultValue="UIT-2023-10294" className="h-11 rounded-xl" />
+              <Label htmlFor="o-uid">Student ID</Label>
+              <Input id="o-uid" defaultValue="TNT-2361" className="h-11 rounded-xl" />
             </div>
             <div className="space-y-2">
               <Label>Department</Label>
