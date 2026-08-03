@@ -5,7 +5,7 @@ import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { subjects, timetable } from "@/data/academic";
+import { formatTime, subjects, timetable } from "@/data/academic";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/timetable")({
@@ -75,7 +75,7 @@ function TimetablePage() {
                   className="absolute -translate-y-1/2 text-[11px] text-muted-foreground"
                   style={{ top: (toMinutes(h) - DAY_START) * PX_PER_MIN }}
                 >
-                  {h}
+                  {formatTime(h)}
                 </div>
               ))}
             </div>
@@ -116,7 +116,7 @@ function TimetablePage() {
                           <p className="truncate text-xs font-semibold">{s.name}</p>
                           <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                             <Clock3 className="size-3 shrink-0" />
-                            {c.start}–{c.end}
+                            {formatTime(c.start)}–{formatTime(c.end)}
                           </p>
                           <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                             <MapPin className="size-3 shrink-0" />

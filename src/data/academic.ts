@@ -44,8 +44,16 @@ export const subjects: Subject[] = [
   { id: "sub_4", code: "CST-4404", name: "Network Design and Engineering", lecturer: "Dr. Thiri Thitsar Khaing", colorToken: "chart-4" },
   { id: "sub_5", code: "CST-4405", name: "Computer Architecture and Organization", lecturer: "Daw Shwe Sin Myat Than", colorToken: "chart-5" },
   { id: "sub_6", code: "CST-4503", name: "IELTS Academic Skills and Strategies", lecturer: "Daw Khin Cho Latt", colorToken: "chart-1" },
-  { id: "sub_7", code: "CST-4105/4307/4406/4407/4408", name: "Keystone Project & Electives", lecturer: "Dr. Ei Moh Moh Aung + team", colorToken: "chart-3" },
+  { id: "sub_7", code: "CST-4105", name: "Enterprise Applications Development using Java (Keystone Project)", lecturer: "Dr. Ei Moh Moh Aung", colorToken: "chart-3" },
 ];
+
+/** Times are stored in 24h for layout maths; use formatTime() for display. */
+export const formatTime = (t: string) => {
+  const h = Number(t.slice(0, 2));
+  const m = t.slice(3);
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m}`;
+};
 
 export interface ClassSession {
   id: string;
@@ -67,7 +75,7 @@ export const timetable: ClassSession[] = [
   { id: "c5", subjectId: "sub_3", day: "Mon", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
   { id: "c6", subjectId: "sub_4", day: "Mon", start: "15:00", end: "16:00", room: "Room 321", type: "Lecture" },
   // Tuesday
-  { id: "c7", subjectId: "sub_7", day: "Tue", start: "08:30", end: "09:30", room: "Rooms 231 · 233 · 433 · 434 · 421", type: "Tutorial" },
+  { id: "c7", subjectId: "sub_7", day: "Tue", start: "08:30", end: "09:30", room: "Room 231", type: "Tutorial" },
   { id: "c8", subjectId: "sub_6", day: "Tue", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
   { id: "c9", subjectId: "sub_4", day: "Tue", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
   { id: "c10", subjectId: "sub_6", day: "Tue", start: "12:40", end: "13:40", room: "Room 321", type: "Lecture" },
@@ -77,7 +85,7 @@ export const timetable: ClassSession[] = [
   { id: "c13", subjectId: "sub_3", day: "Wed", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
   { id: "c14", subjectId: "sub_5", day: "Wed", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
   { id: "c15", subjectId: "sub_2", day: "Wed", start: "12:40", end: "13:40", room: "Room 425", type: "Tutorial" },
-  { id: "c16", subjectId: "sub_7", day: "Wed", start: "13:50", end: "14:50", room: "Rooms 232 · 231 · 433 · 434 · 421", type: "Tutorial" },
+  { id: "c16", subjectId: "sub_7", day: "Wed", start: "13:50", end: "14:50", room: "Room 232", type: "Tutorial" },
   // Thursday
   { id: "c17", subjectId: "sub_2", day: "Thu", start: "08:30", end: "09:30", room: "Room 421", type: "Tutorial" },
   { id: "c18", subjectId: "sub_4", day: "Thu", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
@@ -86,12 +94,12 @@ export const timetable: ClassSession[] = [
   { id: "c21", subjectId: "sub_6", day: "Thu", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
   { id: "c22", subjectId: "sub_5", day: "Thu", start: "15:00", end: "16:00", room: "Room 336", type: "Lecture" },
   // Friday
-  { id: "c23", subjectId: "sub_7", day: "Fri", start: "08:30", end: "09:30", room: "Rooms 233 · 433 · 434 · 421", type: "Lecture" },
+  { id: "c23", subjectId: "sub_7", day: "Fri", start: "08:30", end: "09:30", room: "Room 233", type: "Lecture" },
   { id: "c24", subjectId: "sub_3", day: "Fri", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
   { id: "c25", subjectId: "sub_1", day: "Fri", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
   { id: "c26", subjectId: "sub_2", day: "Fri", start: "12:40", end: "13:40", room: "Room 321", type: "Lecture" },
   { id: "c27", subjectId: "sub_4", day: "Fri", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
-  { id: "c28", subjectId: "sub_7", day: "Fri", start: "15:00", end: "16:00", room: "Rooms 233 · 232 · 334 · 335 · 336", type: "Lecture" },
+  { id: "c28", subjectId: "sub_7", day: "Fri", start: "15:00", end: "16:00", room: "Room 233", type: "Lecture" },
 ];
 
 export const todayClasses = timetable.filter((c) => c.day === "Mon");
