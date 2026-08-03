@@ -38,11 +38,13 @@ export interface Subject {
 }
 
 export const subjects: Subject[] = [
-  { id: "sub_1", code: "CST-4403", name: "Distributed Systems", lecturer: "Dr. H. Lindqvist", colorToken: "chart-1" },
-  { id: "sub_2", code: "CST-4412", name: "Machine Learning", lecturer: "Prof. N. Adeyemi", colorToken: "chart-2" },
-  { id: "sub_3", code: "MAT-3305", name: "Linear Algebra II", lecturer: "Dr. P. Moreau", colorToken: "chart-3" },
-  { id: "sub_4", code: "CST-4420", name: "Database Engineering", lecturer: "Dr. S. Yamada", colorToken: "chart-4" },
-  { id: "sub_5", code: "HUM-2210", name: "Technology & Ethics", lecturer: "Dr. R. Castillo", colorToken: "chart-5" },
+  { id: "sub_1", code: "CST-4104", name: "Artificial Intelligence", lecturer: "Dr. Thet Thet Zin", colorToken: "chart-1" },
+  { id: "sub_2", code: "CST-4204", name: "Linear Algebra", lecturer: "Daw Phyu Phyu Aung", colorToken: "chart-2" },
+  { id: "sub_3", code: "CST-4306", name: "Management Principles & Engineering Economics", lecturer: "Daw Lay Myat Myat Thein", colorToken: "chart-3" },
+  { id: "sub_4", code: "CST-4404", name: "Network Design and Engineering", lecturer: "Dr. Thiri Thitsar Khaing", colorToken: "chart-4" },
+  { id: "sub_5", code: "CST-4405", name: "Computer Architecture and Organization", lecturer: "Daw Shwe Sin Myat Than", colorToken: "chart-5" },
+  { id: "sub_6", code: "CST-4503", name: "IELTS Academic Skills and Strategies", lecturer: "Daw Khin Cho Latt", colorToken: "chart-1" },
+  { id: "sub_7", code: "CST-4105/4307/4406/4407/4408", name: "Keystone Project & Electives", lecturer: "Dr. Ei Moh Moh Aung + team", colorToken: "chart-3" },
 ];
 
 export interface ClassSession {
@@ -55,21 +57,45 @@ export interface ClassSession {
   type: "Lecture" | "Lab" | "Seminar" | "Tutorial";
 }
 
+/** Second Year (Section A) · 2025-2026 Academic Year · Semester IV */
 export const timetable: ClassSession[] = [
-  { id: "c1", subjectId: "sub_1", day: "Mon", start: "09:00", end: "10:30", room: "Block A · 204", type: "Lecture" },
-  { id: "c2", subjectId: "sub_3", day: "Mon", start: "11:00", end: "12:30", room: "Maths Hall · 12", type: "Tutorial" },
-  { id: "c3", subjectId: "sub_2", day: "Mon", start: "14:00", end: "16:00", room: "AI Lab · 3", type: "Lab" },
-  { id: "c4", subjectId: "sub_4", day: "Tue", start: "10:00", end: "11:30", room: "Block C · 118", type: "Lecture" },
-  { id: "c5", subjectId: "sub_5", day: "Tue", start: "13:00", end: "14:30", room: "Humanities · 07", type: "Seminar" },
-  { id: "c6", subjectId: "sub_2", day: "Wed", start: "09:00", end: "10:30", room: "Block A · 301", type: "Lecture" },
-  { id: "c7", subjectId: "sub_1", day: "Wed", start: "15:00", end: "17:00", room: "Systems Lab · 2", type: "Lab" },
-  { id: "c8", subjectId: "sub_3", day: "Thu", start: "09:30", end: "11:00", room: "Maths Hall · 04", type: "Lecture" },
-  { id: "c9", subjectId: "sub_4", day: "Thu", start: "13:30", end: "15:30", room: "Data Lab · 1", type: "Lab" },
-  { id: "c10", subjectId: "sub_5", day: "Fri", start: "10:00", end: "11:30", room: "Humanities · 22", type: "Lecture" },
-  { id: "c11", subjectId: "sub_1", day: "Fri", start: "13:00", end: "14:30", room: "Block A · 204", type: "Tutorial" },
+  // Monday
+  { id: "c1", subjectId: "sub_5", day: "Mon", start: "08:30", end: "09:30", room: "Room 235", type: "Tutorial" },
+  { id: "c2", subjectId: "sub_6", day: "Mon", start: "09:40", end: "10:40", room: "Room 244 · E-Lab", type: "Lab" },
+  { id: "c3", subjectId: "sub_2", day: "Mon", start: "10:50", end: "11:50", room: "Room 322", type: "Lecture" },
+  { id: "c4", subjectId: "sub_1", day: "Mon", start: "12:40", end: "13:40", room: "Room 321", type: "Lecture" },
+  { id: "c5", subjectId: "sub_3", day: "Mon", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
+  { id: "c6", subjectId: "sub_4", day: "Mon", start: "15:00", end: "16:00", room: "Room 321", type: "Lecture" },
+  // Tuesday
+  { id: "c7", subjectId: "sub_7", day: "Tue", start: "08:30", end: "09:30", room: "Rooms 231 · 233 · 433 · 434 · 421", type: "Tutorial" },
+  { id: "c8", subjectId: "sub_6", day: "Tue", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
+  { id: "c9", subjectId: "sub_4", day: "Tue", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
+  { id: "c10", subjectId: "sub_6", day: "Tue", start: "12:40", end: "13:40", room: "Room 321", type: "Lecture" },
+  { id: "c11", subjectId: "sub_5", day: "Tue", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
+  { id: "c12", subjectId: "sub_1", day: "Tue", start: "15:00", end: "16:00", room: "Room 321", type: "Lecture" },
+  // Wednesday
+  { id: "c13", subjectId: "sub_3", day: "Wed", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
+  { id: "c14", subjectId: "sub_5", day: "Wed", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
+  { id: "c15", subjectId: "sub_2", day: "Wed", start: "12:40", end: "13:40", room: "Room 425", type: "Tutorial" },
+  { id: "c16", subjectId: "sub_7", day: "Wed", start: "13:50", end: "14:50", room: "Rooms 232 · 231 · 433 · 434 · 421", type: "Tutorial" },
+  // Thursday
+  { id: "c17", subjectId: "sub_2", day: "Thu", start: "08:30", end: "09:30", room: "Room 421", type: "Tutorial" },
+  { id: "c18", subjectId: "sub_4", day: "Thu", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
+  { id: "c19", subjectId: "sub_1", day: "Thu", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
+  { id: "c20", subjectId: "sub_3", day: "Thu", start: "12:40", end: "13:40", room: "Room 321", type: "Lecture" },
+  { id: "c21", subjectId: "sub_6", day: "Thu", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
+  { id: "c22", subjectId: "sub_5", day: "Thu", start: "15:00", end: "16:00", room: "Room 336", type: "Lecture" },
+  // Friday
+  { id: "c23", subjectId: "sub_7", day: "Fri", start: "08:30", end: "09:30", room: "Rooms 233 · 433 · 434 · 421", type: "Lecture" },
+  { id: "c24", subjectId: "sub_3", day: "Fri", start: "09:40", end: "10:40", room: "Room 421", type: "Tutorial" },
+  { id: "c25", subjectId: "sub_1", day: "Fri", start: "10:50", end: "11:50", room: "Room 421", type: "Tutorial" },
+  { id: "c26", subjectId: "sub_2", day: "Fri", start: "12:40", end: "13:40", room: "Room 321", type: "Lecture" },
+  { id: "c27", subjectId: "sub_4", day: "Fri", start: "13:50", end: "14:50", room: "Room 321", type: "Lecture" },
+  { id: "c28", subjectId: "sub_7", day: "Fri", start: "15:00", end: "16:00", room: "Rooms 233 · 232 · 334 · 335 · 336", type: "Lecture" },
 ];
 
 export const todayClasses = timetable.filter((c) => c.day === "Mon");
+
 
 export interface Deadline {
   id: string;

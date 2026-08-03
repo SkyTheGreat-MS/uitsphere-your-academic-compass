@@ -21,10 +21,11 @@ export const Route = createFileRoute("/timetable")({
 });
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
-const hours = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+const hours = ["08:30", "09:40", "10:50", "11:50", "12:40", "13:50", "15:00", "16:00"];
 
 const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
-const DAY_START = toMinutes("09:00");
+const DAY_START = toMinutes("08:30");
+const DAY_END = toMinutes("16:10");
 const PX_PER_MIN = 1.1;
 
 function TimetablePage() {
@@ -32,7 +33,7 @@ function TimetablePage() {
     <AppShell>
       <PageHeader
         title="Timetable"
-        description="Week 8 · Semester 2 · 11 scheduled sessions"
+        description="Second Year (Section A) · Semester IV · 28 scheduled sessions"
         actions={
           <>
             <Button variant="outline" className="rounded-xl" onClick={() => toast("Timetable exported", { description: "An .ics file would be downloaded here." })}>
@@ -67,7 +68,7 @@ function TimetablePage() {
           </div>
 
           <div className="relative grid grid-cols-[64px_repeat(5,minmax(0,1fr))] gap-3">
-            <div className="relative" style={{ height: hours.length * 60 * PX_PER_MIN }}>
+            <div className="relative" style={{ height: (DAY_END - DAY_START) * PX_PER_MIN }}>
               {hours.map((h) => (
                 <div
                   key={h}
@@ -83,7 +84,7 @@ function TimetablePage() {
               <div
                 key={d}
                 className="relative rounded-xl bg-muted/40"
-                style={{ height: hours.length * 60 * PX_PER_MIN }}
+                style={{ height: (DAY_END - DAY_START) * PX_PER_MIN }}
               >
                 {hours.map((h) => (
                   <div
