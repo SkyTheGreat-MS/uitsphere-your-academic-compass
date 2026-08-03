@@ -162,8 +162,8 @@ function DashboardPage() {
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-semibold">{c.start}</p>
-                      <p className="text-[11px] text-muted-foreground">{c.end}</p>
+                      <p className="text-sm font-semibold">{formatTime(c.start)}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatTime(c.end)}</p>
                     </div>
                   </li>
                 );
