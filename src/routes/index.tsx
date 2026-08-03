@@ -32,6 +32,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   currentStudent,
+  formatTime,
   deadlines,
   studyStats,
   subjects,
