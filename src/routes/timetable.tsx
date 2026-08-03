@@ -71,7 +71,7 @@ function TimetablePage() {
             <div className="relative" style={{ height: (DAY_END - DAY_START) * PX_PER_MIN }}>
               {hours.map((h) => (
                 <div
-                  key={formatTime(h)}
+                  key={h}
                   className="absolute -translate-y-1/2 text-[11px] text-muted-foreground"
                   style={{ top: (toMinutes(h) - DAY_START) * PX_PER_MIN }}
                 >
@@ -88,7 +88,7 @@ function TimetablePage() {
               >
                 {hours.map((h) => (
                   <div
-                    key={formatTime(h)}
+                    key={h}
                     className="absolute inset-x-0 border-t border-border/70"
                     style={{ top: (toMinutes(h) - DAY_START) * PX_PER_MIN }}
                   />
