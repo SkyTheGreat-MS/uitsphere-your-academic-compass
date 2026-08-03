@@ -33,7 +33,7 @@ function TimetablePage() {
     <AppShell>
       <PageHeader
         title="Timetable"
-        description="Week 8 · Semester 2 · 11 scheduled sessions"
+        description="Second Year (Section A) · Semester IV · 28 scheduled sessions"
         actions={
           <>
             <Button variant="outline" className="rounded-xl" onClick={() => toast("Timetable exported", { description: "An .ics file would be downloaded here." })}>
@@ -68,7 +68,7 @@ function TimetablePage() {
           </div>
 
           <div className="relative grid grid-cols-[64px_repeat(5,minmax(0,1fr))] gap-3">
-            <div className="relative" style={{ height: hours.length * 60 * PX_PER_MIN }}>
+            <div className="relative" style={{ height: (DAY_END - DAY_START) * PX_PER_MIN }}>
               {hours.map((h) => (
                 <div
                   key={h}
@@ -84,7 +84,7 @@ function TimetablePage() {
               <div
                 key={d}
                 className="relative rounded-xl bg-muted/40"
-                style={{ height: hours.length * 60 * PX_PER_MIN }}
+                style={{ height: (DAY_END - DAY_START) * PX_PER_MIN }}
               >
                 {hours.map((h) => (
                   <div
