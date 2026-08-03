@@ -44,8 +44,16 @@ export const subjects: Subject[] = [
   { id: "sub_4", code: "CST-4404", name: "Network Design and Engineering", lecturer: "Dr. Thiri Thitsar Khaing", colorToken: "chart-4" },
   { id: "sub_5", code: "CST-4405", name: "Computer Architecture and Organization", lecturer: "Daw Shwe Sin Myat Than", colorToken: "chart-5" },
   { id: "sub_6", code: "CST-4503", name: "IELTS Academic Skills and Strategies", lecturer: "Daw Khin Cho Latt", colorToken: "chart-1" },
-  { id: "sub_7", code: "CST-4105/4307/4406/4407/4408", name: "Keystone Project & Electives", lecturer: "Dr. Ei Moh Moh Aung + team", colorToken: "chart-3" },
+  { id: "sub_7", code: "CST-4105", name: "Enterprise Applications Development using Java (Keystone Project)", lecturer: "Dr. Ei Moh Moh Aung", colorToken: "chart-3" },
 ];
+
+/** Times are stored in 24h for layout maths; use formatTime() for display. */
+export const formatTime = (t: string) => {
+  const h = Number(t.slice(0, 2));
+  const m = t.slice(3);
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m}`;
+};
 
 export interface ClassSession {
   id: string;
