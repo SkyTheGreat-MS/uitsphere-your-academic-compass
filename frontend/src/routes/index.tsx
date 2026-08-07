@@ -42,6 +42,7 @@ import { announcements, lostItems } from "@/data/campus";
 import { recentAiActivity } from "@/data/studio";
 import { useAuth } from "@/context/AuthContext";
 import { getTimetable, type TimetableEntry } from "@/api/timetableApi";
+import { formatMinutesUntil, getTimetableState, timeToMinutes } from "@/lib/timetable";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,11 +91,17 @@ const quickActions = [
 function DashboardPage() {
   const { student, isLoading } = useAuth();
   const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
+  const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     getTimetable().then(setTimetable).catch(() => setTimetable([]));
   }, []);
-  const currentDay = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
-  const todayClasses = timetable.filter((entry) => entry.day === currentDay);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const schedule = getTimetableState(timetable, now);
+  const currentDay = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(now);
+  const dateLabel = new Intl.DateTimeFormat("en-US", { weekday: "long", day: "numeric", month: "long" }).format(now);
 
   if (isLoading || !student) {
     return (
@@ -122,7 +129,7 @@ function DashboardPage() {
           <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="min-w-0">
               <Badge className="rounded-full border-0 bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/20">
-                Monday, 10 March
+                {dateLabel}
               </Badge>
               <h1 className="mt-3 text-2xl font-bold lg:text-3xl">
                 Good morning, {student.name?.split(" ")[0]} 👋
@@ -200,8 +207,8 @@ function DashboardPage() {
 
         <div className="grid gap-4 xl:grid-cols-3">
           <SectionCard
-            title="Today's classes"
-            description="Monday · 3 sessions"
+            title={schedule.current ? "Current class" : schedule.isBreak ? schedule.breakLabel : schedule.nextUpcoming ? "Next class" : "Today's classes"}
+            description={`${currentDay} · ${schedule.today.length} ${schedule.today.length === 1 ? "session" : "sessions"}`}
             action={
               <Button asChild variant="ghost" size="sm" className="rounded-lg">
                 <Link to="/timetable">
@@ -210,8 +217,33 @@ function DashboardPage() {
               </Button>
             }
           >
+            {schedule.current && (
+              <div className="mb-3 rounded-xl border border-primary/30 bg-primary-soft p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">In progress · ends {schedule.current.endTime}</p>
+                <p className="mt-1 text-sm font-semibold">{schedule.current.subjectCode} · {schedule.current.subjectName}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Room {schedule.current.room} · {schedule.current.type}</p>
+              </div>
+            )}
+            {!schedule.current && schedule.isBreak && (
+              <div className="mb-3 rounded-xl border border-dashed border-border bg-muted/40 p-3">
+                <p className="text-sm font-semibold">{schedule.breakLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Next class starts at {schedule.nextToday?.startTime} · {formatMinutesUntil(timeToMinutes(schedule.nextToday!.startTime) - (now.getHours() * 60 + now.getMinutes()))}.</p>
+              </div>
+            )}
+            {!schedule.current && !schedule.isBreak && schedule.nextUpcoming && (
+              <div className="mb-3 rounded-xl border border-primary/30 bg-primary-soft p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Next class · {schedule.nextUpcomingDay}</p>
+                <p className="mt-1 text-sm font-semibold">{schedule.nextUpcoming.subjectCode} · {schedule.nextUpcoming.subjectName}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Starts at {schedule.nextUpcoming.startTime} · Room {schedule.nextUpcoming.room}{schedule.nextUpcomingDay === currentDay ? ` · ${formatMinutesUntil(timeToMinutes(schedule.nextUpcoming.startTime) - (now.getHours() * 60 + now.getMinutes()))}` : ""}</p>
+              </div>
+            )}
+            {schedule.hasFinishedToday && (
+              <div className="mb-3 rounded-xl border border-dashed border-border bg-muted/40 p-3">
+                <p className="text-sm font-semibold">No more classes today.</p>
+              </div>
+            )}
             <ul className="space-y-3">
-              {todayClasses.map((c) => {
+              {schedule.remaining.map((c) => {
                 return (
                   <li
                     key={`${c.day}-${c.startTime}-${c.subjectCode}`}
@@ -234,6 +266,7 @@ function DashboardPage() {
                   </li>
                 );
               })}
+              {!schedule.remaining.length && !schedule.hasFinishedToday && !schedule.current && <li className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">No upcoming classes today.</li>}
             </ul>
           </SectionCard>
 

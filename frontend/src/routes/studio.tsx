@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
@@ -11,6 +12,8 @@ import {
   GraduationCap,
   Send,
   Upload,
+  Loader2,
+  Trash2,
   Clock3,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +25,8 @@ import {
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/layout/AppShell";
+import { askAI } from "@/api/aiApi";
+import { deleteMaterial, getMaterials, uploadMaterial, type LearningMaterial } from "@/api/materialsApi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,14 +41,12 @@ import { subjects } from "@/data/academic";
 import {
   exampleQuestions,
   flashcards,
-  learningMaterials,
   mockExam,
   quizQuestions,
   recentSessions,
   smartNotes,
   suggestedPrompts,
   summaries,
-  tutorConversation,
   examPerformance,
   type ChatMessage,
 } from "@/data/studio";
@@ -66,7 +69,80 @@ export const Route = createFileRoute("/studio")({
 
 const subjectOf = (id: string) => subjects.find((s) => s.id === id)!;
 
+function axiosErrorMessage(error: unknown) {
+  if (axios.isAxiosError<{ error?: string }>(error)) {
+    return error.response?.data?.error ?? error.message;
+  }
+  return error instanceof Error ? error.message : "Please try again.";
+}
+
+function formatUploadDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatMaterialStatus(status: LearningMaterial["status"]) {
+  return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
 function StudioPage() {
+  const [materials, setMaterials] = useState<LearningMaterial[]>([]);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(null);
+  const [materialsLoading, setMaterialsLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    getMaterials()
+      .then(setMaterials)
+      .catch(() => toast.error("Could not load learning materials", { description: "Please try again." }))
+      .finally(() => setMaterialsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const readyMaterials = materials.filter((material) => material.status === "READY");
+    setSelectedMaterialId((current) =>
+      current !== null && readyMaterials.some((material) => material.id === current)
+        ? current
+        : readyMaterials[0]?.id ?? null,
+    );
+  }, [materials]);
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const material = await uploadMaterial(file);
+      setMaterials((current) => [material, ...current]);
+      if (material.status === "READY") setSelectedMaterialId(material.id);
+      toast.success("Material uploaded", { description: file.name });
+    } catch (error) {
+      const message = axiosErrorMessage(error);
+      toast.error("Upload failed", { description: message });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeletingId(id);
+    try {
+      await deleteMaterial(id);
+      setMaterials((current) => current.filter((material) => material.id !== id));
+      setSelectedMaterialId((current) => (current === id ? null : current));
+      toast.success("Material deleted");
+    } catch (error) {
+      toast.error("Could not delete material", { description: axiosErrorMessage(error) });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <AppShell>
       <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
@@ -78,9 +154,23 @@ function StudioPage() {
             Semester IV · Enterprise Applications Development using Java
           </p>
         </div>
-        <Button className="shrink-0 rounded-xl" onClick={() => toast.success("Upload ready", { description: "Material would be processed here." })}>
-          <Upload className="size-4" /> Upload material
-        </Button>
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept=".pdf,.ppt,.pptx,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+            onChange={handleFileSelected}
+          />
+          <Button
+            className="shrink-0 rounded-xl"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+            {uploading ? "Uploading…" : "Upload lecture materials (PDF, images)"}
+          </Button>
+        </>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
@@ -89,29 +179,56 @@ function StudioPage() {
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Learning materials
             </h2>
-            <ul className="space-y-2">
-              {learningMaterials.map((m, i) => (
-                <li key={m.id}>
-                  <button
+            {materialsLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+              </div>
+            ) : materials.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                No learning materials yet. Upload a lecture file to get started.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {materials.map((material) => (
+                  <li
+                    key={material.id}
                     className={cn(
-                      "w-full rounded-xl border p-3 text-left transition-colors",
-                      i === 0 ? "border-primary/40 bg-primary-soft" : "border-border hover:bg-muted",
+                      "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 rounded-xl border p-1",
+                      selectedMaterialId === material.id ? "border-primary/40 bg-primary-soft" : "border-border",
                     )}
                   >
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                      <p className="truncate text-xs font-semibold">{m.title}</p>
-                      <Badge variant="secondary" className="shrink-0 rounded-full text-[10px]">
-                        {m.type}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                      {subjectOf(m.subjectId).code} · {m.pages} pages · {m.uploadedAt}
-                    </p>
-                    {m.status === "processing" && <Skeleton className="mt-2 h-1.5 w-full rounded-full" />}
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <button
+                      type="button"
+                      className="min-w-0 rounded-lg p-2 text-left hover:bg-muted/60"
+                      disabled={material.status !== "READY"}
+                      onClick={() => setSelectedMaterialId(material.id)}
+                    >
+                      <p className="truncate text-xs font-semibold">{material.fileName}</p>
+                      <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                        {material.fileType} · {formatUploadDate(material.uploadedAt)}
+                      </p>
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {formatMaterialStatus(material.status)}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${material.fileName}`}
+                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                      disabled={deletingId === material.id}
+                      onClick={() => handleDelete(material.id)}
+                    >
+                      {deletingId === material.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-3.5" />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
 
           <Card className="gap-0 rounded-2xl border-border p-4 shadow-soft">
@@ -152,7 +269,13 @@ function StudioPage() {
             ))}
           </TabsList>
 
-          <TabsContent value="tutor" className="mt-4"><TutorTab /></TabsContent>
+          <TabsContent value="tutor" className="mt-4">
+            <TutorTab
+              materials={materials}
+              selectedMaterialId={selectedMaterialId}
+              onSelectMaterial={setSelectedMaterialId}
+            />
+          </TabsContent>
           <TabsContent value="summary" className="mt-4"><SummaryTab /></TabsContent>
           <TabsContent value="notes" className="mt-4"><NotesTab /></TabsContent>
           <TabsContent value="flashcards" className="mt-4"><FlashcardsTab /></TabsContent>
@@ -166,11 +289,16 @@ function StudioPage() {
 
 /* ---------------------------------- Tutor --------------------------------- */
 
-const mockReply = (q: string) =>
-  `Great question about “${q.slice(0, 48)}”. Here's the short version: identify the system boundary, then connect the concept to its purpose and trade-offs. Would you like me to turn this into flashcards or a practice question?`;
-
-function TutorTab() {
-  const [messages, setMessages] = useState<ChatMessage[]>(tutorConversation);
+function TutorTab({
+  materials,
+  selectedMaterialId,
+  onSelectMaterial,
+}: {
+  materials: LearningMaterial[];
+  selectedMaterialId: number | null;
+  onSelectMaterial: (id: number | null) => void;
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -179,16 +307,30 @@ function TutorTab() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  const send = (text: string) => {
+  const send = async (text: string) => {
     if (!text.trim()) return;
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     setMessages((m) => [...m, { id: `u${Date.now()}`, role: "student", content: text, time: now }]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
+
+    try {
+      const response = await askAI(text, selectedMaterialId);
+      const answerTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setMessages((m) => [
+        ...m,
+        {
+          id: `a${Date.now()}`,
+          role: "ai",
+          content: response.reply ?? response.answer ?? "I could not generate a response.",
+          time: answerTime,
+        },
+      ]);
+    } catch {
+      toast.error("AI service unavailable");
+    } finally {
       setTyping(false);
-      setMessages((m) => [...m, { id: `a${Date.now()}`, role: "ai", content: mockReply(text), time: now }]);
-    }, 1400);
+    }
   };
 
   return (
@@ -270,6 +412,26 @@ function TutorTab() {
       </ScrollArea>
 
       <div className="border-t border-border p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <label htmlFor="tutor-material" className="shrink-0 text-xs font-semibold text-muted-foreground">
+            Lecture context
+          </label>
+          <select
+            id="tutor-material"
+            value={selectedMaterialId ?? ""}
+            onChange={(event) => onSelectMaterial(event.target.value ? Number(event.target.value) : null)}
+            className="min-w-0 flex-1 rounded-lg border border-border bg-card px-2.5 py-2 text-xs text-foreground outline-none focus:border-primary"
+          >
+            <option value="">General knowledge</option>
+            {materials
+              .filter((material) => material.status === "READY")
+              .map((material) => (
+                <option key={material.id} value={material.id}>
+                  {material.fileName}
+                </option>
+              ))}
+          </select>
+        </div>
         <div className="mb-3 flex flex-wrap gap-2">
           {suggestedPrompts.map((p) => (
             <button

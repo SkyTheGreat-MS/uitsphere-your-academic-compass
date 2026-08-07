@@ -42,6 +42,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/students")
                         .permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/ai/chat")
+                        .authenticated()
+
+                        .requestMatchers("/materials/**")
+                        .authenticated()
+
                         .anyRequest().authenticated()
                 );
 

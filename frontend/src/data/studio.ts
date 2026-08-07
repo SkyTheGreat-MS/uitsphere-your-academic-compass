@@ -11,12 +11,6 @@ export const recentSessions: StudioSession[] = [
   { id: "s1", title: "AI search methods review", tool: "AI Tutor", when: "35 min ago" }, { id: "s2", title: "Network design summary", tool: "Summary", when: "3 hours ago" }, { id: "s3", title: "Matrix transformation flashcards", tool: "Flashcards", when: "Yesterday" }, { id: "s4", title: "Enterprise Java mock exam", tool: "Mock Exam", when: "2 days ago" }, { id: "s5", title: "Architecture smart notes", tool: "Smart Notes", when: "4 days ago" },
 ];
 export interface ChatMessage { id: string; role: "student" | "ai"; content: string; time: string; }
-export const tutorConversation: ChatMessage[] = [
-  { id: "cm1", role: "student", content: "Can you explain how dependency injection helps an enterprise Java application?", time: "10:12" },
-  { id: "cm2", role: "ai", content: "Dependency injection supplies a class with the services it needs instead of making the class construct them directly. This keeps responsibilities clear, makes components easier to test, and allows implementations to be changed without rewriting the consumer.", time: "10:12" },
-  { id: "cm3", role: "student", content: "What should I remember for the CST-4105 assessment?", time: "10:14" },
-  { id: "cm4", role: "ai", content: "Focus on clear service boundaries, persistence, validation, and how requests move through the application layers. Be ready to explain why each layer exists and how it supports maintainability.", time: "10:14" },
-];
 export const suggestedPrompts = ["Explain this lecture like I’m a second-year student", "Give me 5 exam-style questions", "Compare two network routing approaches", "What should I revise before the CST-4105 assessment?", "Build a 3-day Semester IV revision plan"];
 export const exampleQuestions = ["Why is dependency injection useful in enterprise Java?", "How does matrix rank describe a linear transformation?", "What is the purpose of a routing protocol?"];
 export interface LectureSummary { id: string; title: string; subjectId: string; readingTime: string; bullets: string[]; takeaways: string[]; }
