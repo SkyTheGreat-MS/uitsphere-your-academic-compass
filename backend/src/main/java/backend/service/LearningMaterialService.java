@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +23,8 @@ import java.util.UUID;
 
 @Service
 public class LearningMaterialService {
+
+    private static final Logger log = LoggerFactory.getLogger(LearningMaterialService.class);
 
     private final LearningMaterialRepository materialRepository;
     private final StudentRepository studentRepository;
@@ -71,17 +75,27 @@ public class LearningMaterialService {
             Files.createDirectories(studentDirectory);
             Files.copy(file.getInputStream(), storedFile);
             material.setStatus(LearningMaterialStatus.PROCESSING);
+            material.setProcessingError(null);
             materialRepository.save(material);
 
             DocumentProcessingService.ProcessingResult processingResult =
-                    documentProcessingService.process(file, storedFile, fileType);
+                    documentProcessingService.process(file, storedFile, fileType, material.getId());
             material.setExtractedText(processingResult.extractedText());
+            material.setProcessingError(processingResult.message());
             material.setStatus(processingResult.successful()
                     ? LearningMaterialStatus.READY
                     : LearningMaterialStatus.FAILED);
+            if (!processingResult.successful()) {
+                log.warn("[OCR] Processing failed for materialId={}: {}",
+                        material.getId(), processingResult.message());
+            } else if (fileType == LearningMaterialFileType.IMAGE) {
+                log.info("[OCR] Saved extracted text successfully for materialId={}",
+                        material.getId());
+            }
             return LearningMaterialResponse.from(materialRepository.save(material));
         } catch (LearningMaterialException ex) {
             material.setStatus(LearningMaterialStatus.FAILED);
+            material.setProcessingError(ex.getMessage());
             materialRepository.save(material);
             throw ex;
         } catch (IOException ex) {

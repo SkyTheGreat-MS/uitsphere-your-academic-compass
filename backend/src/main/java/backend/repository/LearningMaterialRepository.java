@@ -12,4 +12,6 @@ public interface LearningMaterialRepository extends JpaRepository<LearningMateri
     List<LearningMaterial> findByStudentOrderByCreatedAtDesc(Student student);
 
     Optional<LearningMaterial> findByIdAndStudent(Long id, Student student);
+
+    List<LearningMaterial> findByIdInAndStudent(List<Long> ids, Student student);
 }

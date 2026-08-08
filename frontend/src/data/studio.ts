@@ -6,13 +6,6 @@ export const learningMaterials: LearningMaterial[] = [
   { id: "m4", title: "Computer Architecture — instruction cycles.pdf", type: "PDF", subjectId: "sub_5", pages: 31, uploadedAt: "3 days ago", status: "processing" },
   { id: "m5", title: "Enterprise Java — service layer guide.pdf", type: "PDF", subjectId: "sub_7", pages: 27, uploadedAt: "Last week", status: "processed" },
 ];
-export interface StudioSession { id: string; title: string; tool: string; when: string; }
-export const recentSessions: StudioSession[] = [
-  { id: "s1", title: "AI search methods review", tool: "AI Tutor", when: "35 min ago" }, { id: "s2", title: "Network design summary", tool: "Summary", when: "3 hours ago" }, { id: "s3", title: "Matrix transformation flashcards", tool: "Flashcards", when: "Yesterday" }, { id: "s4", title: "Enterprise Java mock exam", tool: "Mock Exam", when: "2 days ago" }, { id: "s5", title: "Architecture smart notes", tool: "Smart Notes", when: "4 days ago" },
-];
-export interface ChatMessage { id: string; role: "student" | "ai"; content: string; time: string; }
-export const suggestedPrompts = ["Explain this lecture like I’m a second-year student", "Give me 5 exam-style questions", "Compare two network routing approaches", "What should I revise before the CST-4105 assessment?", "Build a 3-day Semester IV revision plan"];
-export const exampleQuestions = ["Why is dependency injection useful in enterprise Java?", "How does matrix rank describe a linear transformation?", "What is the purpose of a routing protocol?"];
 export interface LectureSummary { id: string; title: string; subjectId: string; readingTime: string; bullets: string[]; takeaways: string[]; }
 export const summaries: LectureSummary[] = [
   { id: "sum1", title: "Artificial Intelligence — search and reasoning", subjectId: "sub_1", readingTime: "4 min read", bullets: ["Search strategies explore a problem space systematically.", "Heuristics estimate how promising a state is.", "A good evaluation function balances cost and expected progress."], takeaways: ["Choose a search strategy based on the problem structure.", "Explain the trade-off between completeness and efficiency."] },

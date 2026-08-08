@@ -14,10 +14,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/ai")
 public class AIController {
+
+    private static final Logger log = LoggerFactory.getLogger(AIController.class);
 
     private final GroqService groqService;
     private final MaterialContextService materialContextService;
@@ -29,8 +33,9 @@ public class AIController {
 
     @PostMapping("/chat")
     public AIResponse chat(@Valid @RequestBody AIRequest request) {
-        System.out.println("AI question: " + request.prompt());
-        System.out.println("AI material ID: " + request.materialId());
+        log.info("AI request mapped successfully: messageLength={}, materialId={}, hasContext={}",
+                request.prompt().length(), request.materialId(),
+                request.context() != null && !request.context().isBlank());
         String context = request.materialId() == null
                 ? request.context()
                 : materialContextService.getMaterialContext(request.materialId());
@@ -52,6 +57,7 @@ public class AIController {
 
     @ExceptionHandler(LearningMaterialException.class)
     public ResponseEntity<ErrorResponse> handleMaterialContextError(LearningMaterialException ex) {
+        log.warn("AI material context request failed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(ex.getMessage()));
     }

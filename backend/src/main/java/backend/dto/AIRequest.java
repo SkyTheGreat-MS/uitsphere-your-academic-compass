@@ -1,19 +1,13 @@
 package backend.dto;
 
-import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotBlank;
 
 public record AIRequest(
-        String message,
-        String question,
+        @NotBlank(message = "message is required") String message,
         String context,
         Long materialId) {
 
-    @AssertTrue(message = "message is required")
-    public boolean hasMessage() {
-        return (message != null && !message.isBlank()) || (question != null && !question.isBlank());
-    }
-
     public String prompt() {
-        return message != null && !message.isBlank() ? message : question;
+        return message;
     }
 }

@@ -10,7 +10,7 @@ This prompt is ONLY for the frontend/UI.
 
 Do NOT implement backend logic, authentication, databases, or APIs.
 
-Use placeholder data and mock AI responses throughout.
+The AI Tutor uses the authenticated backend chat and persisted conversation history.
 
 ----------------------------------------------------
 
@@ -176,7 +176,7 @@ Left sidebar
 
 Uploaded learning materials
 
-Recent sessions
+Chat history
 
 Main workspace
 
@@ -205,10 +205,6 @@ Chat interface
 Student messages
 
 AI responses
-
-Suggested prompts
-
-Example questions
 
 Typing animation
 

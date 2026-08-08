@@ -45,6 +45,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/ai/chat")
                         .authenticated()
 
+                        .requestMatchers("/api/chat/**")
+                        .authenticated()
+
                         .requestMatchers("/materials/**")
                         .authenticated()
 

@@ -43,6 +43,9 @@ public class LearningMaterial {
     @Column(name = "extracted_text", columnDefinition = "text")
     private String extractedText;
 
+    @Column(name = "processing_error", columnDefinition = "text")
+    private String processingError;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "file_type", nullable = false)
     private LearningMaterialFileType fileType;
@@ -127,6 +130,14 @@ public class LearningMaterial {
 
     public void setExtractedText(String extractedText) {
         this.extractedText = extractedText;
+    }
+
+    public String getProcessingError() {
+        return processingError;
+    }
+
+    public void setProcessingError(String processingError) {
+        this.processingError = processingError;
     }
 
     public LearningMaterialFileType getFileType() {

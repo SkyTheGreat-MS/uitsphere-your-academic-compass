@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class MaterialContextService {
 
@@ -30,6 +33,22 @@ public class MaterialContextService {
         LearningMaterial material = materialRepository.findByIdAndStudent(materialId, student)
                 .orElseThrow(() -> new LearningMaterialException("Learning material not found."));
 
+        return validatedText(material);
+    }
+
+    public String getMaterialContext(List<Long> materialIds) {
+        if (materialIds == null || materialIds.isEmpty()) return null;
+        Student student = currentStudent();
+        List<LearningMaterial> materials = materialRepository.findByIdInAndStudent(materialIds, student);
+        if (materials.size() != materialIds.stream().distinct().count()) {
+            throw new LearningMaterialException("One or more learning materials were not found.");
+        }
+        return materials.stream()
+                .map(this::validatedText)
+                .collect(Collectors.joining("\n\n--- Next lecture ---\n\n"));
+    }
+
+    private String validatedText(LearningMaterial material) {
         if (material.getStatus() == LearningMaterialStatus.PROCESSING) {
             throw new LearningMaterialException("Learning material is still being processed.");
         }
