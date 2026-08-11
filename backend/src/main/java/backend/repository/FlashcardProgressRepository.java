@@ -14,4 +14,6 @@ public interface FlashcardProgressRepository extends JpaRepository<FlashcardProg
     Optional<FlashcardProgress> findByStudentAndFlashcard(Student student, Flashcard flashcard);
 
     List<FlashcardProgress> findAllByStudentAndFlashcardIn(Student student, Collection<Flashcard> flashcards);
+
+    long countByStudentAndLearned(Student student, boolean learned);
 }

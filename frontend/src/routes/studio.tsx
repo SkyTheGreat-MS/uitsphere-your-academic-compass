@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
@@ -9,7 +10,6 @@ import {
   NotebookPen,
   Layers,
   ListChecks,
-  GraduationCap,
   Send,
   Upload,
   Loader2,
@@ -20,11 +20,9 @@ import {
   CheckCircle2,
   RotateCcw,
   X,
-  Timer,
   BookOpen,
   MessageSquarePlus,
 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   createChatSession,
@@ -77,23 +75,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { subjects } from "@/data/academic";
-import {
-  mockExam,
-  smartNotes,
-  examPerformance,
-} from "@/data/studio";
 
 export const Route = createFileRoute("/studio")({
   head: () => ({
     meta: [
-      { title: "AI Learning Studio — Ma-Haw-Tha-Dar" },
+      { title: "AI Learning Studio â€” Ma-Haw-Tha-Dar" },
       {
         name: "description",
         content:
-          "Turn lecture materials into AI tutoring, summaries, smart notes, flashcards, quizzes and full mock exams.",
+          "Turn lecture materials into AI tutoring, summaries, smart notes, flashcards and quizzes.",
       },
-      { property: "og:title", content: "AI Learning Studio — Ma-Haw-Tha-Dar" },
+      { property: "og:title", content: "AI Learning Studio â€” Ma-Haw-Tha-Dar" },
       {
         property: "og:description",
         content: "Your AI-powered study workspace for university lectures and revision.",
@@ -102,8 +94,6 @@ export const Route = createFileRoute("/studio")({
   }),
   component: StudioPage,
 });
-
-const subjectOf = (id: string) => subjects.find((s) => s.id === id)!;
 
 function axiosErrorMessage(error: unknown) {
   if (axios.isAxiosError<{ error?: string }>(error)) {
@@ -144,6 +134,9 @@ function StudioPage() {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const refreshDashboard = () => void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
   useEffect(() => {
     getMaterials()
@@ -174,6 +167,7 @@ function StudioPage() {
       const material = await uploadMaterial(file);
       setMaterials((current) => [material, ...current]);
       toast.success("Material uploaded", { description: file.name });
+      refreshDashboard();
     } catch (error) {
       const message = axiosErrorMessage(error);
       toast.error("Upload failed", { description: message });
@@ -220,7 +214,7 @@ function StudioPage() {
             <Sparkles className="size-6 shrink-0 text-primary" /> AI Learning Studio
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Semester IV · Enterprise Applications Development using Java
+            Semester IV Â· Enterprise Applications Development using Java
           </p>
         </div>
         <>
@@ -241,7 +235,7 @@ function StudioPage() {
             ) : (
               <Upload className="size-4" />
             )}
-            {uploading ? "Uploading…" : "Upload lecture materials (PDF, images)"}
+            {uploading ? "Uploadingâ€¦" : "Upload lecture materials (PDF, images)"}
           </Button>
         </>
       </div>
@@ -287,7 +281,7 @@ function StudioPage() {
                     >
                       <p className="truncate text-xs font-semibold">{material.fileName}</p>
                       <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                        {material.fileType} · {formatUploadDate(material.uploadedAt)}
+                        {material.fileType} Â· {formatUploadDate(material.uploadedAt)}
                       </p>
                       <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                         {formatMaterialStatus(material.status)}
@@ -350,7 +344,7 @@ function StudioPage() {
                       <p className="truncate text-xs font-medium">{session.title}</p>
 
                       <p className="text-[11px] text-muted-foreground">
-                        {s.tool} · {s.when}
+                        {s.tool} Â· {s.when}
                       </p>
                     </div>
                   </li>
@@ -368,7 +362,6 @@ function StudioPage() {
               { v: "notes", l: "Smart Notes", i: NotebookPen },
               { v: "flashcards", l: "Flashcards", i: Layers },
               { v: "quiz", l: "Quiz Generator", i: ListChecks },
-              { v: "exam", l: "Mock Exam", i: GraduationCap },
             ].map((t) => (
               <TabsTrigger key={t.v} value={t.v} className="rounded-lg text-xs sm:text-sm">
                 <t.i className="size-4" /> {t.l}
@@ -410,9 +403,6 @@ function StudioPage() {
               selectedMaterialIds={selectedMaterialIds}
               onSelectMaterials={setSelectedMaterialIds}
             />
-          </TabsContent>
-          <TabsContent value="exam" className="mt-4">
-            <ExamTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -611,7 +601,7 @@ function TutorTab({
                     Enterprise Applications Development using Java
                   </span>
                   <span className="mt-1 block text-[10px] text-muted-foreground">
-                    {material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} ·{" "}
+                    {material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â·{" "}
                     {formatMaterialStatus(material.status)}
                   </span>
                 </span>
@@ -630,7 +620,7 @@ function TutorTab({
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything about your lecture materials…"
+            placeholder="Ask anything about your lecture materialsâ€¦"
             className="h-11 rounded-xl"
           />
           <Button
@@ -662,6 +652,7 @@ function SummaryTab({
   const [activeSummary, setActiveSummary] = useState<GeneratedSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     getSummaries()
@@ -684,6 +675,7 @@ function SummaryTab({
       setSummaries((current) => [summary, ...current]);
       setActiveSummary(summary);
       toast.success("Summary generated");
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (error) {
       toast.error("Could not generate summary", { description: axiosErrorMessage(error) });
     } finally { setGenerating(false); }
@@ -705,7 +697,7 @@ function SummaryTab({
             const ready = material.status === "READY";
             return <button type="button" key={material.id} disabled={!ready} onClick={() => toggleMaterial(material.id)} className={cn("flex items-start gap-3 rounded-xl border p-4 text-left transition", selected ? "border-primary bg-primary-soft/60" : "border-border bg-white hover:border-primary/50", !ready && "cursor-not-allowed opacity-50")}>
               <FileText className="mt-0.5 size-5 shrink-0 text-primary" />
-              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} · {formatMaterialStatus(material.status)}</span></span>
+              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â· {formatMaterialStatus(material.status)}</span></span>
               {selected && <CheckCircle2 className="size-5 shrink-0 text-primary" />}
             </button>;
           })}
@@ -716,7 +708,7 @@ function SummaryTab({
         <Card className="rounded-2xl border-dashed p-10 text-center shadow-soft"><Sparkles className="mx-auto size-8 text-primary" /><h3 className="mt-3 font-semibold">No summaries yet</h3><p className="mt-1 text-sm text-muted-foreground">Select lecture materials and generate your first study summary.</p></Card>
       ) : <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
         <Card className="rounded-2xl border-border p-3 shadow-soft"><p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous summaries</p><div className="space-y-1">{summaries.map((summary) => <button type="button" key={summary.id} onClick={() => setActiveSummary(summary)} className={cn("w-full rounded-xl p-3 text-left text-sm transition", activeSummary?.id === summary.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted")}><span className="block truncate">{summary.title}</span><span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(summary.createdAt)}</span></button>)}</div></Card>
-        {activeSummary && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeSummary.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeSummary.materialIds.length} lecture(s) · {formatUploadDate(activeSummary.createdAt)}</p><div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{activeSummary.content}</div></Card>}
+        {activeSummary && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeSummary.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeSummary.materialIds.length} lecture(s) Â· {formatUploadDate(activeSummary.createdAt)}</p><div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{activeSummary.content}</div></Card>}
       </div>}
     </div>
   );
@@ -737,6 +729,7 @@ function NotesTab({
   const [activeNote, setActiveNote] = useState<GeneratedSmartNote | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     getSmartNotes().then((loaded) => { setNotes(loaded); setActiveNote(loaded[0] ?? null); })
@@ -756,6 +749,7 @@ function NotesTab({
       setNotes((current) => [note, ...current]);
       setActiveNote(note);
       toast.success("Smart notes generated");
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (error) {
       toast.error("Could not generate smart notes", { description: axiosErrorMessage(error) });
     } finally { setGenerating(false); }
@@ -769,100 +763,18 @@ function NotesTab({
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">{materials.length === 0 ? <p className="text-sm text-muted-foreground">Upload a lecture to begin.</p> : materials.map((material) => {
         const selected = selectedMaterialIds.includes(material.id); const ready = material.status === "READY";
-        return <button type="button" key={material.id} disabled={!ready} onClick={() => toggleMaterial(material.id)} className={cn("flex items-start gap-3 rounded-xl border p-4 text-left transition", selected ? "border-primary bg-primary-soft/60" : "border-border bg-white hover:border-primary/50", !ready && "cursor-not-allowed opacity-50")}><FileText className="mt-0.5 size-5 shrink-0 text-primary" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} · {formatMaterialStatus(material.status)}</span></span>{selected && <CheckCircle2 className="size-5 shrink-0 text-primary" />}</button>;
+        return <button type="button" key={material.id} disabled={!ready} onClick={() => toggleMaterial(material.id)} className={cn("flex items-start gap-3 rounded-xl border p-4 text-left transition", selected ? "border-primary bg-primary-soft/60" : "border-border bg-white hover:border-primary/50", !ready && "cursor-not-allowed opacity-50")}><FileText className="mt-0.5 size-5 shrink-0 text-primary" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â· {formatMaterialStatus(material.status)}</span></span>{selected && <CheckCircle2 className="size-5 shrink-0 text-primary" />}</button>;
       })}</div>
       <p className="mt-3 text-xs text-muted-foreground">Selected: {selectedMaterialIds.length} lecture(s)</p>
     </Card>
     {loading ? <Skeleton className="h-48 rounded-2xl" /> : !notes.length ? <Card className="rounded-2xl border-dashed p-10 text-center shadow-soft"><NotebookPen className="mx-auto size-8 text-primary" /><h3 className="mt-3 font-semibold">No smart notes yet</h3><p className="mt-1 text-sm text-muted-foreground">Select lecture materials and generate your first revision notes.</p></Card> : <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
       <Card className="rounded-2xl border-border p-3 shadow-soft"><p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous notes</p>{notes.map((note) => <button type="button" key={note.id} onClick={() => setActiveNote(note)} className={cn("mt-1 w-full rounded-xl p-3 text-left text-sm transition", activeNote?.id === note.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted")}><span className="block truncate">{note.title}</span><span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(note.createdAt)}</span></button>)}</Card>
-      {activeNote && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeNote.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeNote.materialIds.length} lecture(s) · {formatUploadDate(activeNote.createdAt)}</p><div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{activeNote.content}</div></Card>}
+{activeNote && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeNote.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeNote.materialIds.length} lecture(s) Â· {formatUploadDate(activeNote.createdAt)}</p><div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{activeNote.content}</div></Card>}
     </div>}
   </div>;
 }
 
-function LegacyMockNotesTab() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {smartNotes.map((n, i) => (
-        <motion.div
-          key={n.id}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.06 }}
-        >
-          <Card className="hover-lift h-full gap-0 rounded-2xl border-border p-5 shadow-soft">
-            <h3 className="text-base font-semibold">{n.title}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{subjectOf(n.subjectId).name}</p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {n.keyConcepts.map((k) => (
-                <Badge key={k} variant="secondary" className="rounded-full text-[11px]">
-                  {k}
-                </Badge>
-              ))}
-            </div>
-
-            <Block title="Definitions">
-              <dl className="space-y-2">
-                {n.definitions.map((d) => (
-                  <div key={d.term}>
-                    <dt className="text-sm font-semibold">{d.term}</dt>
-                    <dd className="text-sm text-muted-foreground">{d.meaning}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Block>
-
-            <Block title="Important points">
-              <ul className="space-y-1.5">
-                {n.importantPoints.map((p) => (
-                  <li key={p} className="flex gap-2 text-sm text-muted-foreground">
-                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-chart-2" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </Block>
-
-            <div className="mt-4 rounded-xl bg-warning/15 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-warning-foreground">
-                Exam tips
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {n.examTips.map((t) => (
-                  <li key={t} className="text-sm text-warning-foreground">
-                    • {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <Block title="Examples">
-              <ul className="space-y-1.5">
-                {n.examples.map((e) => (
-                  <li key={e} className="text-sm text-muted-foreground">
-                    • {e}
-                  </li>
-                ))}
-              </ul>
-            </Block>
-          </Card>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-4">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
+/* --------------------------------- Flashcards ------------------------------ */
 
 /* -------------------------------- Flashcards ------------------------------ */
 
@@ -882,6 +794,9 @@ function FlashcardsTab({
   const [cardIndex, setCardIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+
+  const refreshDashboard = () => void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
   useEffect(() => {
     let active = true;
@@ -940,6 +855,7 @@ function FlashcardsTab({
       setCardIndex(0);
       setFlipped(false);
       toast.success("Flashcards generated");
+      refreshDashboard();
     } catch (error) {
       toast.error("Could not generate flashcards", { description: axiosErrorMessage(error) });
     } finally {
@@ -978,6 +894,7 @@ function FlashcardsTab({
     try {
       await markFlashcardLearned(card.id, target);
       if (target) toast.success("Marked as learned");
+      refreshDashboard();
     } catch (error) {
       setActiveDeck((current) =>
         current
@@ -1064,7 +981,7 @@ function FlashcardsTab({
                       {material.fileName}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
-                      {material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} ·{" "}
+                      {material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â·{" "}
                       {formatMaterialStatus(material.status)}
                     </span>
                   </span>
@@ -1119,7 +1036,7 @@ function FlashcardsTab({
                   >
                     <span className="block truncate text-sm font-semibold">{deck.title}</span>
                     <span className="mt-1 block truncate text-xs text-muted-foreground">
-                      {deck.cardCount} cards · {formatTimestamp(deck.createdAt)}
+                      {deck.cardCount} cards Â· {formatTimestamp(deck.createdAt)}
                     </span>
                     <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                       {deckLectureTitles(deck)}
@@ -1270,6 +1187,9 @@ function QuizTab({
   const [lastAttempt, setLastAttempt] = useState<{ score: number; total: number } | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const queryClient = useQueryClient();
+
+  const refreshDashboard = () => void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
   useEffect(() => {
     let active = true;
@@ -1399,6 +1319,7 @@ function QuizTab({
         setResult(finished);
         setLastAttempt({ score: finished.score, total: finished.totalQuestions });
         setPhase("result");
+        refreshDashboard();
       } catch (error) {
         toast.error("Could not finish quiz", { description: axiosErrorMessage(error) });
       } finally {
@@ -1461,7 +1382,7 @@ function QuizTab({
                       {material.fileName}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
-                      {material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} ·{" "}
+                      {material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â·{" "}
                       {formatMaterialStatus(material.status)}
                     </span>
                   </span>
@@ -1525,7 +1446,7 @@ function QuizTab({
                   >
                     <span className="block truncate text-sm font-semibold">{quiz.title}</span>
                     <span className="mt-1 block truncate text-xs text-muted-foreground">
-                      {quiz.questionCount} questions · {formatTimestamp(quiz.createdAt)}
+                      {quiz.questionCount} questions Â· {formatTimestamp(quiz.createdAt)}
                     </span>
                     <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                       {quizMaterialsTitle(quiz)}
@@ -1716,7 +1637,7 @@ function QuizTab({
             <Card className="gap-0 rounded-2xl border-border p-6 shadow-soft">
               <h2 className="text-lg font-semibold">{activeQuiz.quiz.title}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {activeQuiz.quiz.questionCount} questions · {quizMaterialsTitle(activeQuiz.quiz)} ·
+                {activeQuiz.quiz.questionCount} questions Â· {quizMaterialsTitle(activeQuiz.quiz)} Â·
                 Created {formatTimestamp(activeQuiz.quiz.createdAt)}
               </p>
               {lastAttempt && (
@@ -1738,190 +1659,3 @@ function QuizTab({
   );
 }
 
-/* --------------------------------- Mock exam ------------------------------ */
-
-function ExamTab() {
-  const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [seconds, setSeconds] = useState(45 * 60);
-
-  useEffect(() => {
-    if (submitted) return;
-    const t = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [submitted]);
-
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-  const q = mockExam[index];
-  const correct = mockExam.filter((question, i) => answers[i] === question.answerIndex).length;
-
-  if (submitted) {
-    return (
-      <div className="space-y-4">
-        <Card className="gap-0 rounded-2xl border-border p-8 text-center shadow-soft">
-          <p className="text-sm text-muted-foreground">Mock exam submitted</p>
-          <p className="mt-2 font-display text-5xl font-bold text-primary">
-            {Math.round((correct / mockExam.length) * 100)}%
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {correct} of {mockExam.length} questions correct · {45 - Math.floor(seconds / 60)} min
-            used
-          </p>
-          <Button
-            className="mt-6 rounded-xl"
-            onClick={() => {
-              setSubmitted(false);
-              setAnswers({});
-              setIndex(0);
-              setSeconds(45 * 60);
-            }}
-          >
-            <RotateCcw className="size-4" /> Retake exam
-          </Button>
-        </Card>
-
-        <Card className="gap-0 rounded-2xl border-border p-5 shadow-soft">
-          <h3 className="mb-4 text-sm font-semibold">Performance analytics</h3>
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={examPerformance} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--color-border)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="topic"
-                  tick={{ fontSize: 11 }}
-                  stroke="var(--color-muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  stroke="var(--color-muted-foreground)"
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "1px solid var(--color-border)",
-                    background: "var(--color-card)",
-                    fontSize: 12,
-                  }}
-                />
-                <Bar
-                  dataKey="score"
-                  fill="var(--color-primary)"
-                  radius={[8, 8, 0, 0]}
-                  animationDuration={900}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-      <Card className="gap-0 rounded-2xl border-border p-6 shadow-soft">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Semester IV — Mock Exam A</p>
-            <p className="text-xs text-muted-foreground">
-              Question {index + 1} of {mockExam.length} · {q.marks} marks
-            </p>
-          </div>
-          <span className="flex shrink-0 items-center gap-1.5 rounded-xl bg-destructive/10 px-3 py-1.5 font-mono text-sm font-semibold text-destructive">
-            <Timer className="size-4" /> {mm}:{ss}
-          </span>
-        </div>
-
-        <h3 className="mt-6 font-display text-lg font-semibold">{q.question}</h3>
-        <div className="mt-5 space-y-2.5">
-          {q.options.map((o, i) => (
-            <button
-              key={o}
-              onClick={() => setAnswers((a) => ({ ...a, [index]: i }))}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm transition-colors",
-                answers[index] === i
-                  ? "border-primary bg-primary-soft"
-                  : "border-border hover:bg-muted",
-              )}
-            >
-              <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-muted text-xs font-bold">
-                {String.fromCharCode(65 + i)}
-              </span>
-              {o}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <Button
-            variant="outline"
-            className="rounded-xl"
-            disabled={index === 0}
-            onClick={() => setIndex((i) => i - 1)}
-          >
-            <ChevronLeft className="size-4" /> Previous
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-xl"
-            disabled={index === mockExam.length - 1}
-            onClick={() => setIndex((i) => i + 1)}
-          >
-            Next <ChevronRight className="size-4" />
-          </Button>
-        </div>
-      </Card>
-
-      <Card className="h-fit gap-0 rounded-2xl border-border p-5 shadow-soft">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Question palette
-        </h3>
-        <div className="mt-3 grid grid-cols-5 gap-2">
-          {mockExam.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              className={cn(
-                "grid aspect-square place-items-center rounded-lg text-xs font-semibold transition-colors",
-                i === index
-                  ? "bg-primary text-primary-foreground"
-                  : answers[i] !== undefined
-                    ? "bg-success/20 text-success"
-                    : "bg-muted text-muted-foreground hover:bg-accent/40",
-              )}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-        <p className="mt-4 text-xs text-muted-foreground">
-          {Object.keys(answers).length} of {mockExam.length} answered
-        </p>
-        <Progress
-          value={(Object.keys(answers).length / mockExam.length) * 100}
-          className="mt-2 h-1.5"
-        />
-        <Button
-          className="mt-5 w-full rounded-xl"
-          onClick={() => {
-            setSubmitted(true);
-            toast.success("Exam submitted", { description: "Your results are ready." });
-          }}
-        >
-          Submit exam
-        </Button>
-      </Card>
-    </div>
-  );
-}

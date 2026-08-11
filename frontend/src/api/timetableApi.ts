@@ -15,3 +15,11 @@ export async function getTimetable() {
   const response = await apiClient.get<TimetableEntry[]>("/timetable");
   return response.data;
 }
+
+export async function importTimetable(rows: TimetableEntry[]) {
+  const response = await apiClient.post<{ imported: number; skipped: number }>(
+    "/timetable/import",
+    rows,
+  );
+  return response.data;
+}

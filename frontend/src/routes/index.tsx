@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import {
   Flame,
   Clock3,
-  Target,
   Layers,
   ArrowUpRight,
   Sparkles,
@@ -12,37 +12,23 @@ import {
   PackageSearch,
   MapPin,
   Pin,
+  FileText,
+  Award,
+  BookOpen,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { AppShell } from "@/components/layout/AppShell";
-import { SectionCard, StatCard, PriorityBadge } from "@/components/common/Primitives";
+import { SectionCard, StatCard } from "@/components/common/Primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
-import {
-  deadlines,
-  studyStats,
-  subjects,
-  weeklyProductivity,
-  subjectMastery,
-} from "@/data/academic";
 import { announcements, lostItems } from "@/data/campus";
-import { recentAiActivity } from "@/data/studio";
 import { useAuth } from "@/context/AuthContext";
 import { getTimetable, type TimetableEntry } from "@/api/timetableApi";
+import { getDashboard } from "@/api/dashboardApi";
 import { formatMinutesUntil, getTimetableState, timeToMinutes } from "@/lib/timetable";
+import { activityTool, formatWhen } from "@/lib/activity";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,15 +42,12 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Dashboard — Ma-Haw-Tha-Dar" },
       {
         property: "og:description",
-        content:
-          "Classes, deadlines, study analytics and AI tools for university students in one calm workspace.",
+        content: "Classes, study analytics and AI study tools in one calm workspace.",
       },
     ],
   }),
   component: DashboardPage,
 });
-
-const subjectOf = (id: string) => subjects.find((s) => s.id === id)!;
 
 const quickActions = [
   {
@@ -75,33 +58,80 @@ const quickActions = [
   },
   {
     label: "View timetable",
-    desc: "5 classes this week",
+    desc: "Plan around your classes",
     icon: CalendarDays,
     to: "/timetable" as const,
   },
-  { label: "Plan your day", desc: "4 tasks pending", icon: ListChecks, to: "/planner" as const },
+  {
+    label: "Plan your day",
+    desc: "Organise your study tasks",
+    icon: ListChecks,
+    to: "/planner" as const,
+  },
   {
     label: "Lost something?",
-    desc: "2 possible matches",
+    desc: "Check campus reports",
     icon: PackageSearch,
     to: "/lost-found" as const,
   },
 ];
 
+const materialStatusLabel = (status: string) => status.charAt(0) + status.slice(1).toLowerCase();
+
+const materialStatusTone: Record<string, string> = {
+  READY: "border-success/30 bg-success/10 text-success",
+  PROCESSING: "border-warning/30 bg-warning/15 text-warning-foreground",
+  UPLOADED: "border-warning/30 bg-warning/15 text-warning-foreground",
+  FAILED: "border-destructive/30 bg-destructive/10 text-destructive",
+};
+
+function formatUploadDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
 function DashboardPage() {
   const { student, isLoading } = useAuth();
   const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
   const [now, setNow] = useState(() => new Date());
+  const {
+    data: dashboard,
+    isLoading: dashLoading,
+    isError: dashError,
+    refetch: refetchDashboard,
+  } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: () => getDashboard(),
+    staleTime: 60_000,
+  });
   useEffect(() => {
-    getTimetable().then(setTimetable).catch(() => setTimetable([]));
+    getTimetable()
+      .then(setTimetable)
+      .catch(() => setTimetable([]));
   }, []);
+  useEffect(() => {
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void refetchDashboard();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [refetchDashboard]);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
   const schedule = getTimetableState(timetable, now);
   const currentDay = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(now);
-  const dateLabel = new Intl.DateTimeFormat("en-US", { weekday: "long", day: "numeric", month: "long" }).format(now);
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
 
   if (isLoading || !student) {
     return (
@@ -112,6 +142,12 @@ function DashboardPage() {
       </AppShell>
     );
   }
+
+  const quizStats = dashboard?.quizStats;
+  const flashcardStats = dashboard?.flashcardStats;
+  const studyProgress = dashboard?.studyProgress;
+  const classesToday = schedule.today.length;
+  const classLabel = classesToday === 1 ? "class" : "classes";
 
   return (
     <AppShell>
@@ -135,8 +171,15 @@ function DashboardPage() {
                 Good morning, {student.name?.split(" ")[0]} 👋
               </h1>
               <p className="mt-2 max-w-xl text-sm text-primary-foreground/80">
-                You have <strong>3 classes</strong> today and <strong>2 deadlines</strong> this
-                week. Your focus score is up 8% — a great day to tackle the consensus report.
+                {classesToday > 0
+                  ? `You have ${classesToday} ${classLabel} today. ${
+                      quizStats?.completed
+                        ? `You have finished ${quizStats.completed} ${
+                            quizStats.completed === 1 ? "quiz" : "quizzes"
+                          } with an average of ${quizStats.averageScore}%.`
+                        : "Ready to build your study progress in the AI Learning Studio?"
+                    }`
+                  : "No classes scheduled today. A relaxed day to review your materials or take a quiz."}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button asChild size="lg" variant="secondary" className="rounded-xl">
@@ -154,60 +197,101 @@ function DashboardPage() {
                 </Button>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 rounded-2xl bg-primary-foreground/10 p-4 backdrop-blur-sm lg:w-[320px]">
-              {[
-                { k: "Streak", v: `${studyStats.streakDays}d` },
-                { k: "Focus", v: `${studyStats.focusScore}%` },
-                { k: "Quiz avg", v: `${studyStats.quizAverage}%` },
-              ].map((s) => (
-                <div key={s.k}>
-                  <p className="text-[11px] uppercase tracking-wide text-primary-foreground/70">
-                    {s.k}
-                  </p>
-                  <p className="font-display text-xl font-bold">{s.v}</p>
-                </div>
-              ))}
-            </div>
+            {dashLoading ? (
+              <div className="grid grid-cols-3 gap-3 rounded-2xl bg-primary-foreground/10 p-4 backdrop-blur-sm lg:w-[320px]">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="h-2 w-12 animate-pulse rounded bg-primary-foreground/30" />
+                    <div className="h-5 w-16 animate-pulse rounded bg-primary-foreground/30" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 rounded-2xl bg-primary-foreground/10 p-4 backdrop-blur-sm lg:w-[320px]">
+                {[
+                  { k: "Classes today", v: `${classesToday}` },
+                  { k: "Quiz avg", v: quizStats ? `${quizStats.averageScore}%` : "—" },
+                  {
+                    k: "Flashcards",
+                    v: flashcardStats ? `${flashcardStats.learned}/${flashcardStats.total}` : "—",
+                  },
+                ].map((s) => (
+                  <div key={s.k}>
+                    <p className="text-[11px] uppercase tracking-wide text-primary-foreground/70">
+                      {s.k}
+                    </p>
+                    <p className="font-display text-xl font-bold">{s.v}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            icon={Flame}
-            label="Study streak"
-            value={`${studyStats.streakDays} days`}
-            hint="Personal best: 24 days"
-            delay={0}
-          />
-          <StatCard
-            icon={Clock3}
-            label="Hours this week"
-            value={`${studyStats.hoursThisWeek}h`}
-            hint="+3.4h vs last week"
-            tone="accent"
-            delay={0.05}
-          />
-          <StatCard
-            icon={Target}
-            label="Quiz average"
-            value={`${studyStats.quizAverage}%`}
-            hint="Across 12 quizzes"
-            tone="warning"
-            delay={0.1}
-          />
-          <StatCard
-            icon={Layers}
-            label="Flashcards done"
-            value={`${studyStats.flashcardsCompleted}`}
-            hint="6 decks active"
-            tone="muted"
-            delay={0.15}
-          />
+          {dashLoading ? (
+            <>
+              <Skeleton className="h-[118px] rounded-2xl" />
+              <Skeleton className="h-[118px] rounded-2xl" />
+              <Skeleton className="h-[118px] rounded-2xl" />
+              <Skeleton className="h-[118px] rounded-2xl" />
+            </>
+          ) : (
+            <>
+              <StatCard
+                icon={Flame}
+                label="Quizzes completed"
+                value={`${quizStats?.completed ?? 0}`}
+                hint="Completed AI quizzes"
+                delay={0}
+              />
+              <StatCard
+                icon={Clock3}
+                label="Quiz average"
+                value={`${quizStats?.averageScore ?? 0}%`}
+                hint={`Across ${quizStats?.completed ?? 0} ${
+                  quizStats?.completed === 1 ? "quiz" : "quizzes"
+                }`}
+                tone="accent"
+                delay={0.05}
+              />
+              <StatCard
+                icon={Award}
+                label="Best quiz score"
+                value={`${quizStats?.bestScore ?? 0}%`}
+                hint={
+                  quizStats?.latestResult
+                    ? `Latest: ${quizStats.latestResult.quizTitle}`
+                    : "No quiz attempts yet"
+                }
+                tone="warning"
+                delay={0.1}
+              />
+              <StatCard
+                icon={Layers}
+                label="Flashcards learned"
+                value={`${flashcardStats?.learned ?? 0} / ${flashcardStats?.total ?? 0}`}
+                hint={`${flashcardStats?.decks ?? 0} ${
+                  flashcardStats?.decks === 1 ? "deck" : "decks"
+                }`}
+                tone="muted"
+                delay={0.15}
+              />
+            </>
+          )}
         </div>
 
         <div className="grid gap-4 xl:grid-cols-3">
           <SectionCard
-            title={schedule.current ? "Current class" : schedule.isBreak ? schedule.breakLabel : schedule.nextUpcoming ? "Next class" : "Today's classes"}
+            title={
+              schedule.current
+                ? "Current class"
+                : schedule.isBreak
+                  ? schedule.breakLabel
+                  : schedule.nextUpcoming
+                    ? "Next class"
+                    : "Today's classes"
+            }
             description={`${currentDay} · ${schedule.today.length} ${schedule.today.length === 1 ? "session" : "sessions"}`}
             action={
               <Button asChild variant="ghost" size="sm" className="rounded-lg">
@@ -219,22 +303,44 @@ function DashboardPage() {
           >
             {schedule.current && (
               <div className="mb-3 rounded-xl border border-primary/30 bg-primary-soft p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">In progress · ends {schedule.current.endTime}</p>
-                <p className="mt-1 text-sm font-semibold">{schedule.current.subjectCode} · {schedule.current.subjectName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Room {schedule.current.room} · {schedule.current.type}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                  In progress · ends {schedule.current.endTime}
+                </p>
+                <p className="mt-1 text-sm font-semibold">
+                  {schedule.current.subjectCode} · {schedule.current.subjectName}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Room {schedule.current.room} · {schedule.current.type}
+                </p>
               </div>
             )}
             {!schedule.current && schedule.isBreak && (
               <div className="mb-3 rounded-xl border border-dashed border-border bg-muted/40 p-3">
                 <p className="text-sm font-semibold">{schedule.breakLabel}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Next class starts at {schedule.nextToday?.startTime} · {formatMinutesUntil(timeToMinutes(schedule.nextToday!.startTime) - (now.getHours() * 60 + now.getMinutes()))}.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Next class starts at {schedule.nextToday?.startTime} ·{" "}
+                  {formatMinutesUntil(
+                    timeToMinutes(schedule.nextToday!.startTime) -
+                      (now.getHours() * 60 + now.getMinutes()),
+                  )}
+                  .
+                </p>
               </div>
             )}
             {!schedule.current && !schedule.isBreak && schedule.nextUpcoming && (
               <div className="mb-3 rounded-xl border border-primary/30 bg-primary-soft p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Next class · {schedule.nextUpcomingDay}</p>
-                <p className="mt-1 text-sm font-semibold">{schedule.nextUpcoming.subjectCode} · {schedule.nextUpcoming.subjectName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Starts at {schedule.nextUpcoming.startTime} · Room {schedule.nextUpcoming.room}{schedule.nextUpcomingDay === currentDay ? ` · ${formatMinutesUntil(timeToMinutes(schedule.nextUpcoming.startTime) - (now.getHours() * 60 + now.getMinutes()))}` : ""}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                  Next class · {schedule.nextUpcomingDay}
+                </p>
+                <p className="mt-1 text-sm font-semibold">
+                  {schedule.nextUpcoming.subjectCode} · {schedule.nextUpcoming.subjectName}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Starts at {schedule.nextUpcoming.startTime} · Room {schedule.nextUpcoming.room}
+                  {schedule.nextUpcomingDay === currentDay
+                    ? ` · ${formatMinutesUntil(timeToMinutes(schedule.nextUpcoming.startTime) - (now.getHours() * 60 + now.getMinutes()))}`
+                    : ""}
+                </p>
               </div>
             )}
             {schedule.hasFinishedToday && (
@@ -266,7 +372,11 @@ function DashboardPage() {
                   </li>
                 );
               })}
-              {!schedule.remaining.length && !schedule.hasFinishedToday && !schedule.current && <li className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">No upcoming classes today.</li>}
+              {!schedule.remaining.length && !schedule.hasFinishedToday && !schedule.current && (
+                <li className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
+                  No upcoming classes today.
+                </li>
+              )}
             </ul>
           </SectionCard>
 
@@ -281,133 +391,120 @@ function DashboardPage() {
               </Button>
             }
           >
-            <ul className="space-y-3">
-              {deadlines.slice(0, 4).map((d) => (
-                <li key={d.id} className="rounded-xl border border-border p-3">
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{d.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {subjectOf(d.subjectId).code} · due {d.dueIn}
-                      </p>
-                    </div>
-                    <PriorityBadge priority={d.priority} />
-                  </div>
-                  <Progress value={d.progress} className="mt-3 h-1.5" />
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+              <span className="grid size-11 place-items-center rounded-2xl bg-primary-soft text-primary">
+                <CalendarDays className="size-5" />
+              </span>
+              <h3 className="mt-3 text-sm font-semibold">No upcoming deadlines</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Deadlines will appear here once you add them to the Study Planner.
+              </p>
+            </div>
           </SectionCard>
 
-          <SectionCard title="Study progress" description="Mastery by subject">
-            <div className="h-[232px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={subjectMastery} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--color-border)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="subject"
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--color-muted-foreground)"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--color-muted-foreground)"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: "1px solid var(--color-border)",
-                      background: "var(--color-card)",
-                      fontSize: 12,
-                    }}
-                  />
-                  <Bar
-                    dataKey="score"
-                    fill="var(--color-primary)"
-                    radius={[8, 8, 0, 0]}
-                    animationDuration={900}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+          <SectionCard title="Study progress" description="Based on your real activity">
+            {dashLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full rounded-full" />
+                <Skeleton className="h-2.5 w-4/5 rounded-full" />
+                <Skeleton className="h-2.5 w-3/5 rounded-full" />
+              </div>
+            ) : dashError ? (
+              <p className="text-sm text-muted-foreground">
+                Could not load your study progress right now.
+              </p>
+            ) : studyProgress?.overall == null ? (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+                <span className="grid size-11 place-items-center rounded-2xl bg-primary-soft text-primary">
+                  <BookOpen className="size-5" />
+                </span>
+                <h3 className="mt-3 text-sm font-semibold">
+                  Start studying to build your progress
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Progress appears once you complete quizzes, learn flashcards or use the AI
+                  Learning Studio.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Overall progress
+                    </p>
+                    <p className="font-display text-lg font-bold">{studyProgress.overall}%</p>
+                  </div>
+                  <Progress value={studyProgress.overall} className="mt-2 h-2.5" />
+                </div>
+                <ul className="space-y-3">
+                  {studyProgress.components.map((component) => (
+                    <li key={component.label}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">{component.label}</span>
+                        <span className="font-semibold">{component.percent}%</span>
+                      </div>
+                      <Progress value={component.percent} className="mt-1.5 h-1.5" />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </SectionCard>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-3">
           <SectionCard
-            title="Weekly productivity"
-            description="Hours studied and focus score"
+            title="Recent materials"
+            description="Latest lecture uploads"
             className="xl:col-span-2"
           >
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={weeklyProductivity}
-                  margin={{ top: 8, right: 8, left: -22, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="hoursFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="focusFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="var(--color-chart-2)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--color-border)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--color-muted-foreground)"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--color-muted-foreground)"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: "1px solid var(--color-border)",
-                      background: "var(--color-card)",
-                      fontSize: 12,
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="focus"
-                    stroke="var(--color-chart-2)"
-                    fill="url(#focusFill)"
-                    strokeWidth={2}
-                    animationDuration={1000}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="hours"
-                    stroke="var(--color-primary)"
-                    fill="url(#hoursFill)"
-                    strokeWidth={2.5}
-                    animationDuration={1000}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            {dashLoading ? (
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <Skeleton key={i} className="h-14 rounded-xl" />
+                ))}
+              </div>
+            ) : dashError ? (
+              <p className="text-sm text-muted-foreground">Could not load your recent materials.</p>
+            ) : !dashboard?.recentMaterials.length ? (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+                <span className="grid size-11 place-items-center rounded-2xl bg-primary-soft text-primary">
+                  <FileText className="size-5" />
+                </span>
+                <h3 className="mt-3 text-sm font-semibold">No materials uploaded yet</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Upload a lecture in the AI Learning Studio to get started.
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {dashboard.recentMaterials.slice(0, 5).map((material) => (
+                  <li
+                    key={material.id}
+                    className="hover-lift flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+                      <FileText className="size-[18px]" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{material.fileName}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={`shrink-0 rounded-full text-[11px] ${
+                        materialStatusTone[material.status] ?? "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {materialStatusLabel(material.status)}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
           </SectionCard>
 
           <SectionCard title="Quick actions" description="Jump straight back in">
@@ -499,33 +596,49 @@ function DashboardPage() {
             </ul>
           </SectionCard>
 
-          <SectionCard title="Recent AI activity" description="Last 48 hours">
-            <ul className="space-y-3">
-              {recentAiActivity.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-start gap-3 rounded-xl border border-border p-3"
-                >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/40 text-accent-foreground">
-                    <Sparkles className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{a.label}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {a.tool} · {a.when}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <SectionCard title="Recent AI activity" description="From your study tools">
+            {dashLoading ? (
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <Skeleton key={i} className="h-14 rounded-xl" />
+                ))}
+              </div>
+            ) : dashError ? (
+              <p className="text-sm text-muted-foreground">
+                Could not load your recent AI activity.
+              </p>
+            ) : !dashboard?.recentActivity.length ? (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+                <span className="grid size-11 place-items-center rounded-2xl bg-primary-soft text-primary">
+                  <Sparkles className="size-5" />
+                </span>
+                <h3 className="mt-3 text-sm font-semibold">No AI activity yet</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Generate summaries, notes, flashcards or quizzes and they will show up here.
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {dashboard.recentActivity.map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-start gap-3 rounded-xl border border-border p-3"
+                  >
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/40 text-accent-foreground">
+                      <Sparkles className="size-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{a.label}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {activityTool[a.type] ?? a.type} · {formatWhen(a.at)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </SectionCard>
         </div>
-
-        <Card className="rounded-2xl border-dashed p-5 text-center shadow-none">
-          <p className="text-sm text-muted-foreground">
-            All data on this dashboard is illustrative sample data for the Ma-Haw-Tha-Dar prototype.
-          </p>
-        </Card>
       </div>
     </AppShell>
   );

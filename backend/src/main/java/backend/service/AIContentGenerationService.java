@@ -40,10 +40,6 @@ public class AIContentGenerationService {
         return generate(promptBuilder.buildQuizPrompt(questionCount), materialIds);
     }
 
-    public String generateMockExam(List<Long> materialIds) {
-        return generate(promptBuilder.buildMockExamPrompt(), materialIds);
-    }
-
     private String generate(String prompt, List<Long> materialIds) {
         if (materialIds == null || materialIds.isEmpty()) {
             throw new LearningMaterialException("Select at least one learning material.");

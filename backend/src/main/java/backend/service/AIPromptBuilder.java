@@ -111,8 +111,4 @@ public class AIPromptBuilder {
                 - No additional text.
                 """.formatted(questionCount);
     }
-
-    public String buildMockExamPrompt() {
-        return "Generate a structured university mock exam from the lecture material. Return valid JSON only.";
-    }
 }

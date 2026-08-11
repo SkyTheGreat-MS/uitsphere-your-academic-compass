@@ -1,0 +1,660 @@
+Picked up JAVA_TOOL_OPTIONS: -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8
+[0.020s][warning][cds] The shared archive file was created by a different version or build of HotSpot
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.mahawthadar:backend >-----------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:4.1.1-SNAPSHOT:run (default-cli) > test-compile @ backend >>>
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ backend ---
+[INFO] skip non existing resourceDirectory D:\Ma-Haw-Tha-Dar\uitsphere-your-academic-compass\backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:4.1.1-SNAPSHOT:run (default-cli) < test-compile @ backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:4.1.1-SNAPSHOT:run (default-cli) @ backend ---
+[INFO] Attaching agents: []
+Picked up JAVA_TOOL_OPTIONS: -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8
+[0.021s][warning][cds] The shared archive file was created by a different version or build of HotSpot
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::       (v4.1.1-SNAPSHOT)
+
+2026-08-10T15:02:28.251+06:30  INFO 17332 --- [backend] [           main] backend.BackendApplication               : Starting BackendApplication using Java 26.0.1 with PID 17332 (D:\Ma-Haw-Tha-Dar\uitsphere-your-academic-compass\backend\target\classes started by IDEAL in D:\Ma-Haw-Tha-Dar\uitsphere-your-academic-compass\backend)
+2026-08-10T15:02:28.260+06:30  INFO 17332 --- [backend] [           main] backend.BackendApplication               : No active profile set, falling back to 1 default profile: "default"
+2026-08-10T15:02:30.260+06:30  INFO 17332 --- [backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-10T15:02:30.456+06:30  INFO 17332 --- [backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 179 ms. Found 15 JPA repository interfaces.
+2026-08-10T15:02:31.753+06:30  INFO 17332 --- [backend] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-08-10T15:02:31.772+06:30  INFO 17332 --- [backend] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-10T15:02:31.772+06:30  INFO 17332 --- [backend] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-08-10T15:02:32.803+06:30  INFO 17332 --- [backend] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 4424 ms
+2026-08-10T15:02:33.146+06:30  INFO 17332 --- [backend] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-08-10T15:02:33.281+06:30  INFO 17332 --- [backend] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-08-10T15:02:34.264+06:30  INFO 17332 --- [backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-10T15:02:34.372+06:30  INFO 17332 --- [backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-10T15:02:35.237+06:30  INFO 17332 --- [backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4b9fa2f
+2026-08-10T15:02:35.239+06:30  INFO 17332 --- [backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-10T15:02:35.461+06:30  INFO 17332 --- [backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/mahawthadar_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.4
+	Default catalog/schema: mahawthadar_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-10T15:02:38.289+06:30  INFO 17332 --- [backend] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-10T15:02:38.668+06:30  INFO 17332 --- [backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-10T15:02:39.425+06:30  INFO 17332 --- [backend] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-10T15:02:40.758+06:30  WARN 17332 --- [backend] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-10T15:02:40.917+06:30  WARN 17332 --- [backend] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: dff3dd93-ee42-4416-9778-6e008c8e7608
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-08-10T15:02:40.930+06:30  INFO 17332 --- [backend] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-08-10T15:02:41.723+06:30  INFO 17332 --- [backend] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-08-10T15:02:41.737+06:30  INFO 17332 --- [backend] [           main] backend.BackendApplication               : Started BackendApplication in 14.459 seconds (process running for 15.466)
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.code,
+        s1_0.lecturer,
+        s1_0.name 
+    from
+        subjects s1_0 
+    where
+        s1_0.code=?
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        te1_0.id 
+    from
+        timetable_entries te1_0 
+    where
+        te1_0.day_of_week=? 
+        and te1_0.start_time=? 
+        and te1_0.section=? 
+        and te1_0.academic_year=? 
+        and te1_0.semester=? 
+    fetch
+        first ? rows only
+2026-08-10T15:05:01.664+06:30  INFO 17332 --- [backend] [nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-08-10T15:05:01.681+06:30  INFO 17332 --- [backend] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-08-10T15:05:01.767+06:30  INFO 17332 --- [backend] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 85 ms
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.avatar_initials,
+        s1_0.batch,
+        s1_0.bio,
+        s1_0.created_at,
+        s1_0.department,
+        s1_0.email,
+        s1_0.name,
+        s1_0.password,
+        s1_0.section,
+        s1_0.university_id,
+        s1_0.year 
+    from
+        students s1_0 
+    where
+        s1_0.email=?
+Hibernate: 
+    insert 
+    into
+        students
+        (avatar_initials, batch, bio, created_at, department, email, name, password, section, university_id, year) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.avatar_initials,
+        s1_0.batch,
+        s1_0.bio,
+        s1_0.created_at,
+        s1_0.department,
+        s1_0.email,
+        s1_0.name,
+        s1_0.password,
+        s1_0.section,
+        s1_0.university_id,
+        s1_0.year 
+    from
+        students s1_0 
+    where
+        s1_0.email=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.avatar_initials,
+        s1_0.batch,
+        s1_0.bio,
+        s1_0.created_at,
+        s1_0.department,
+        s1_0.email,
+        s1_0.name,
+        s1_0.password,
+        s1_0.section,
+        s1_0.university_id,
+        s1_0.year 
+    from
+        students s1_0 
+    where
+        s1_0.email=?
+Hibernate: 
+    update
+        students 
+    set
+        avatar_initials=?,
+        batch=?,
+        bio=?,
+        created_at=?,
+        department=?,
+        email=?,
+        name=?,
+        password=?,
+        section=?,
+        university_id=?,
+        year=? 
+    where
+        id=?
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.avatar_initials,
+        s1_0.batch,
+        s1_0.bio,
+        s1_0.created_at,
+        s1_0.department,
+        s1_0.email,
+        s1_0.name,
+        s1_0.password,
+        s1_0.section,
+        s1_0.university_id,
+        s1_0.year 
+    from
+        students s1_0 
+    where
+        s1_0.email=?
+2026-08-10T17:23:49.066+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1h26m43s501ms319µs700ns).
+2026-08-10T20:42:52.107+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1h36m28s980ms74µs700ns).
+2026-08-11T03:23:02.548+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=3h8s85ms720µs300ns).
+2026-08-11T17:16:30.599+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=13h53m30s990ms800µs).
+2026-08-12T01:58:34.212+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=3h812ms545µs500ns).
+2026-08-12T05:36:35.879+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=3h38m4s954ms125µs900ns).
+2026-08-12T05:42:02.945+06:30  WARN 17332 --- [backend] [l-1:housekeeper] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Failed to validate connection org.postgresql.jdbc.PgConnection@387e3e7a (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
