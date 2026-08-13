@@ -20,7 +20,7 @@ export type FlashcardStats = {
 
 export type RecentActivity = {
   id: string;
-  type: "tutor" | "summary" | "notes" | "flashcards" | "quiz";
+  type: "tutor" | "summary" | "notes" | "flashcards" | "quiz" | "task";
   label: string;
   at: string;
 };

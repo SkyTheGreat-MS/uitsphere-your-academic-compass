@@ -6,6 +6,7 @@ export const activityTool: Record<string, string> = {
   notes: "Smart Notes",
   flashcards: "Flashcards",
   quiz: "Quiz",
+  task: "Study task",
 };
 
 export function formatWhen(value: string) {

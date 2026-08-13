@@ -10,6 +10,8 @@ import backend.entity.Quiz;
 import backend.entity.QuizAttempt;
 import backend.entity.SmartNote;
 import backend.entity.Student;
+import backend.entity.StudyTask;
+import backend.entity.StudyTaskStatus;
 import backend.entity.Summary;
 import backend.repository.ChatSessionRepository;
 import backend.repository.FlashcardDeckRepository;
@@ -20,6 +22,7 @@ import backend.repository.QuizAttemptRepository;
 import backend.repository.QuizRepository;
 import backend.repository.SmartNoteRepository;
 import backend.repository.StudentRepository;
+import backend.repository.StudyTaskRepository;
 import backend.repository.SummaryRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -43,6 +46,7 @@ public class DashboardService {
     private final SummaryRepository summaryRepository;
     private final SmartNoteRepository smartNoteRepository;
     private final ChatSessionRepository chatSessionRepository;
+    private final StudyTaskRepository studyTaskRepository;
 
     public DashboardService(
             StudentRepository studentRepository,
@@ -54,7 +58,8 @@ public class DashboardService {
             LearningMaterialRepository learningMaterialRepository,
             SummaryRepository summaryRepository,
             SmartNoteRepository smartNoteRepository,
-            ChatSessionRepository chatSessionRepository) {
+            ChatSessionRepository chatSessionRepository,
+            StudyTaskRepository studyTaskRepository) {
         this.studentRepository = studentRepository;
         this.quizAttemptRepository = quizAttemptRepository;
         this.quizRepository = quizRepository;
@@ -65,6 +70,7 @@ public class DashboardService {
         this.summaryRepository = summaryRepository;
         this.smartNoteRepository = smartNoteRepository;
         this.chatSessionRepository = chatSessionRepository;
+        this.studyTaskRepository = studyTaskRepository;
     }
 
     @Transactional(readOnly = true)
@@ -143,6 +149,13 @@ public class DashboardService {
         for (Quiz quiz : quizRepository.findByStudentOrderByUpdatedAtDesc(student)) {
             activity.add(new DashboardResponse.RecentActivity(
                     "quiz-" + quiz.getId(), "quiz", quiz.getTitle(), String.valueOf(quiz.getUpdatedAt())));
+        }
+        for (StudyTask task : studyTaskRepository.findByStudentOrderByDueDateAscDueTimeAscCreatedAtDesc(student)) {
+            if (task.getStatus() == StudyTaskStatus.COMPLETED) {
+                activity.add(new DashboardResponse.RecentActivity(
+                        "task-" + task.getId(), "task", task.getTitle(),
+                        String.valueOf(task.getUpdatedAt() == null ? task.getCreatedAt() : task.getUpdatedAt())));
+            }
         }
 
         activity.sort(Comparator.comparing(DashboardResponse.RecentActivity::at, (a, b) -> {
