@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ButtonHTMLAttributes } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   CalendarDays,
   CheckCircle2,
+  Clock,
   Pencil,
   Trash2,
   Sparkles,
@@ -17,6 +18,7 @@ import {
   GraduationCap,
   MapPin,
   FileText,
+  X,
   NotebookPen,
   Layers,
   Loader2,
@@ -29,6 +31,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -517,26 +521,27 @@ function PlannerPage() {
                 className="rounded-xl"
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="t-date">Date</Label>
-                <Input
-                  id="t-date"
-                  type="date"
-                  value={form.dueDate ?? ""}
-                  onChange={(e) => set({ dueDate: e.target.value || null })}
-                  className="h-11 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="t-time">Time</Label>
-                <Input
-                  id="t-time"
-                  type="time"
-                  value={form.dueTime ?? ""}
-                  onChange={(e) => set({ dueTime: e.target.value || null })}
-                  className="h-11 rounded-xl"
-                />
+            <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Schedule
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="t-date">Date</Label>
+                  <DatePickerField
+                    id="t-date"
+                    value={form.dueDate}
+                    onChange={(date) => set({ dueDate: date })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="t-time">Time</Label>
+                  <TimePickerField
+                    id="t-time"
+                    value={form.dueTime}
+                    onChange={(time) => set({ dueTime: time })}
+                  />
+                </div>
               </div>
             </div>
             <div className="space-y-2">
@@ -826,6 +831,249 @@ function formatTime(value: string) {
   const period = h >= 12 ? "PM" : "AM";
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function formatFullDate(value: string) {
+  const date = fromISODate(value);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function PickerTrigger({
+  children,
+  onClear,
+  className,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  onClear?: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1 rounded-xl border border-input bg-background px-3 transition-colors hover:bg-accent/50 focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
+        className,
+      )}
+    >
+      <button
+        type="button"
+        className="flex h-11 min-w-0 flex-1 cursor-pointer items-center gap-2 text-left text-sm font-medium focus:outline-none"
+        {...props}
+      >
+        {children}
+      </button>
+      {onClear && (
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Clear selection"
+          className="grid size-5 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <X className="size-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function DatePickerField({
+  id,
+  value,
+  onChange,
+}: {
+  id?: string;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? fromISODate(value) : undefined;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <PickerTrigger
+          id={id}
+          aria-label={value ? `Due date, ${formatFullDate(value)}` : "No due date"}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onClear={value ? () => onChange(null) : undefined}
+        >
+          <CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          {value ? (
+            <span className="truncate">{formatFullDate(value)}</span>
+          ) : (
+            <span className="truncate text-muted-foreground">No date selected</span>
+          )}
+        </PickerTrigger>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-auto rounded-xl border-border bg-popover p-1 shadow-md"
+      >
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={(date) => {
+            onChange(date ? toISODate(date) : null);
+            setOpen(false);
+          }}
+          autoFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const MINUTES = [0, 15, 30, 45];
+
+function parseTimeValue(value: string) {
+  const [h, m] = value.split(":").map(Number);
+  return {
+    hour: h % 12 === 0 ? 12 : h % 12,
+    minute: m,
+    period: (h >= 12 ? "PM" : "AM") as "AM" | "PM",
+  };
+}
+
+function defaultDraft() {
+  return { hour: 12, minute: 0, period: "AM" as const };
+}
+
+function TimePickerField({
+  id,
+  value,
+  onChange,
+}: {
+  id?: string;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(() => (value ? parseTimeValue(value) : defaultDraft()));
+
+  const lastValue = useRef(value);
+  useEffect(() => {
+    if (value !== lastValue.current) {
+      lastValue.current = value;
+      setDraft(value ? parseTimeValue(value) : defaultDraft());
+    }
+  }, [value]);
+
+  const commit = (next: typeof draft) => {
+    setDraft(next);
+    const hours24 = next.period === "AM" ? next.hour % 12 : (next.hour % 12) + 12;
+    onChange(`${String(hours24).padStart(2, "0")}:${String(next.minute).padStart(2, "0")}`);
+  };
+
+  const previewHours24 = draft.period === "AM" ? draft.hour % 12 : (draft.hour % 12) + 12;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <PickerTrigger
+          id={id}
+          aria-label={value ? `Due time, ${formatTime(value)}` : "No due time"}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onClear={value ? () => onChange(null) : undefined}
+        >
+          <Clock className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          {value ? (
+            <span className="truncate">{formatTime(value)}</span>
+          ) : (
+            <span className="truncate text-muted-foreground">No time selected</span>
+          )}
+        </PickerTrigger>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        className="w-[264px] rounded-xl border-border bg-popover p-3 shadow-md"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Time
+            </p>
+            <p className="text-sm font-semibold tabular-nums">
+              {formatTime(
+                `${String(previewHours24).padStart(2, "0")}:${String(draft.minute).padStart(2, "0")}`,
+              )}
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground">Hour</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {HOURS.map((hour) => (
+                <button
+                  key={hour}
+                  type="button"
+                  onClick={() => commit({ ...draft, hour })}
+                  aria-label={`Set hour to ${hour}`}
+                  className={cn(
+                    "h-9 cursor-pointer rounded-lg text-sm font-medium transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                    draft.hour === hour
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  {hour}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground">Minute</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {MINUTES.map((minute) => (
+                <button
+                  key={minute}
+                  type="button"
+                  onClick={() => commit({ ...draft, minute })}
+                  aria-label={`Set minute to ${minute}`}
+                  className={cn(
+                    "h-9 cursor-pointer rounded-lg text-sm font-medium tabular-nums transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                    draft.minute === minute
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  {String(minute).padStart(2, "0")}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground">Period</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {(["AM", "PM"] as const).map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  onClick={() => commit({ ...draft, period })}
+                  aria-pressed={draft.period === period}
+                  className={cn(
+                    "h-9 cursor-pointer rounded-lg text-sm font-medium transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                    draft.period === period
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function RecommendationIcon({ type }: { type: string }) {
