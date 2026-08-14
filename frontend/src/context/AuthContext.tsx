@@ -11,6 +11,7 @@ export type Student = {
   batch?: string;
   section?: string;
   bio?: string;
+  avatarUrl?: string;
 };
 
 type AuthContextValue = {

@@ -41,6 +41,9 @@ public class Student {
 
     private String avatarInitials;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @Column
     private String section = "Second Year A";
 
@@ -140,6 +143,8 @@ public class Student {
     public void setBio(String bio) { this.bio = bio; }
     public String getAvatarInitials() { return avatarInitials; }
     public void setAvatarInitials(String avatarInitials) { this.avatarInitials = avatarInitials; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
 
     public LocalDateTime getCreatedAt() {

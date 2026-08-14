@@ -32,6 +32,7 @@ public class FlashcardService {
     private final StudentRepository studentRepository;
     private final AIContentGenerationService generationService;
     private final FlashcardResponseParser responseParser;
+    private final StudyStreakService studyStreakService;
 
     public FlashcardService(
             FlashcardDeckRepository deckRepository,
@@ -39,13 +40,14 @@ public class FlashcardService {
             FlashcardProgressRepository progressRepository,
             StudentRepository studentRepository,
             AIContentGenerationService generationService,
-            FlashcardResponseParser responseParser) {
+            FlashcardResponseParser responseParser, StudyStreakService studyStreakService) {
         this.deckRepository = deckRepository;
         this.flashcardRepository = flashcardRepository;
         this.progressRepository = progressRepository;
         this.studentRepository = studentRepository;
         this.generationService = generationService;
         this.responseParser = responseParser;
+        this.studyStreakService = studyStreakService;
     }
 
     @Transactional
@@ -133,7 +135,9 @@ public class FlashcardService {
         if (learned) {
             progress.setLastReviewed(LocalDateTime.now());
         }
-        return FlashcardProgressResponse.from(progressRepository.save(progress));
+        FlashcardProgress saved = progressRepository.save(progress);
+        if (learned) studyStreakService.record(student, backend.entity.StudyActivityType.FLASHCARD_REVIEW);
+        return FlashcardProgressResponse.from(saved);
     }
 
     private Student currentStudent() {

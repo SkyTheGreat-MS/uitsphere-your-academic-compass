@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -15,23 +15,18 @@ import {
   ShieldCheck,
   Download,
   Sparkles,
+  Upload,
+  Trash2,
 } from "lucide-react";
-import {
-  Radar,
-  RadarChart,
-  PolarAngleAxis,
-  PolarGrid,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { SectionCard } from "@/components/common/Primitives";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -41,10 +36,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { subjectMastery } from "@/data/academic";
 import { achievements } from "@/data/campus";
 import { useAuth, type Student } from "@/context/AuthContext";
-import { updateStudent as saveStudent } from "@/api/studentApi";
+import { removeAvatar, updateStudent as saveStudent, uploadAvatar } from "@/api/studentApi";
 import { getDashboard } from "@/api/dashboardApi";
 import { activityTool, formatWhen } from "@/lib/activity";
 
@@ -80,6 +74,8 @@ function ProfilePage() {
   const { student, isLoading, updateStudent } = useAuth();
   const [form, setForm] = useState<Student>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isAvatarSaving, setIsAvatarSaving] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const { data: dashboard } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => getDashboard(),
@@ -106,6 +102,55 @@ function ProfilePage() {
       .join("")
       .toUpperCase() || "ST";
   const set = (updates: Partial<typeof form>) => setForm((current) => ({ ...current, ...updates }));
+  const avatarSrc = student.avatarUrl ? `http://localhost:8080${student.avatarUrl}` : undefined;
+  const departmentOptions = Array.from(
+    new Set([
+      ...(form.department ? [form.department] : []),
+      "Computer Science",
+      "Software Engineering",
+      "Knowledge Engineering",
+      "High Performance Computing",
+      "Cybersecurity",
+      "Electrical Engineering",
+      "Business Information Systems",
+    ]),
+  );
+  const batchOptions = Array.from(new Set([...(form.batch ? [form.batch] : []), "9", "10", "11", "12", "13"]));
+  const studyOverview = dashboard?.studyOverview;
+  const isStudyOverviewLoading = !dashboard;
+  const studyOverviewItems = [
+    ["Materials", studyOverview?.learningMaterials],
+    ["Summaries", studyOverview?.summaries],
+    ["Smart Notes", studyOverview?.smartNotes],
+    ["Flashcard decks", studyOverview?.flashcardDecks],
+    ["Quizzes completed", studyOverview?.quizzesCompleted],
+    ["Study streak", studyOverview?.currentStreak],
+  ] as const;
+
+  const handleAvatarUpload = async (file?: File) => {
+    if (!file) return;
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Unsupported image", { description: "Upload a PNG, JPG, JPEG, or WEBP image." });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image is too large", { description: "Profile images must be 5 MB or smaller." });
+      return;
+    }
+    setIsAvatarSaving(true);
+    try {
+      const saved = await uploadAvatar(file);
+      await updateStudent(saved);
+      setForm(saved);
+      toast.success("Profile photo updated");
+    } catch {
+      toast.error("Unable to upload profile photo");
+    } finally {
+      setIsAvatarSaving(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
   return (
     <AppShell>
       <PageHeader
@@ -118,6 +163,7 @@ function ProfilePage() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-6 pb-6 sm:flex sm:flex-wrap sm:justify-between">
           <div className="flex min-w-0 items-end gap-4">
             <Avatar className="-mt-10 size-20 shrink-0 ring-4 ring-card">
+              <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
               <AvatarFallback className="gradient-brand text-xl font-bold text-primary-foreground">
                 {initials}
               </AvatarFallback>
@@ -185,6 +231,60 @@ function ProfilePage() {
               }
             }}
           >
+            <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+              <Avatar className="size-14 shrink-0">
+                <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
+                <AvatarFallback className="gradient-brand text-sm font-bold text-primary-foreground">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <Label>Profile photo</Label>
+                <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, JPEG, or WEBP up to 5 MB.</p>
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(event) => void handleAvatarUpload(event.target.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="ml-auto rounded-xl"
+                disabled={isAvatarSaving}
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                <Upload className="size-4" />
+                {isAvatarSaving ? "Uploading..." : student.avatarUrl ? "Change photo" : "Upload photo"}
+              </Button>
+              {student.avatarUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-xl text-destructive hover:text-destructive"
+                  disabled={isAvatarSaving}
+                  aria-label="Remove profile photo"
+                  onClick={async () => {
+                    setIsAvatarSaving(true);
+                    try {
+                      const saved = await removeAvatar();
+                      await updateStudent(saved);
+                      setForm(saved);
+                      toast.success("Profile photo removed");
+                    } catch {
+                      toast.error("Unable to remove profile photo");
+                    } finally {
+                      setIsAvatarSaving(false);
+                    }
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="p-name">Full name</Label>
               <Input
@@ -222,14 +322,7 @@ function ProfilePage() {
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {[
-                    "Software Engineering",
-                    "Knowledge Engineering",
-                    "High Performance Computing",
-                    "Cybersecurity",
-                    "Electrical Engineering",
-                    "Business Information Systems",
-                  ].map((d) => (
+                  {departmentOptions.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
@@ -262,7 +355,7 @@ function ProfilePage() {
                   <SelectValue placeholder="Select batch" />
                 </SelectTrigger>
                 <SelectContent>
-                  {["9", "10", "11", "12", "13"].map((batch) => (
+                  {batchOptions.map((batch) => (
                     <SelectItem key={batch} value={batch}>
                       Batch {batch}
                     </SelectItem>
@@ -288,32 +381,18 @@ function ProfilePage() {
           </form>
         </SectionCard>
 
-        <SectionCard title="Subject mastery" description="AI-estimated confidence">
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={subjectMastery} outerRadius="72%">
-                <PolarGrid stroke="var(--color-border)" />
-                <PolarAngleAxis
-                  dataKey="subject"
-                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "1px solid var(--color-border)",
-                    background: "var(--color-card)",
-                    fontSize: 12,
-                  }}
-                />
-                <Radar
-                  dataKey="score"
-                  stroke="var(--color-primary)"
-                  fill="var(--color-primary)"
-                  fillOpacity={0.25}
-                  animationDuration={900}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+        <SectionCard title="Study overview" description="Your real learning activity">
+          <div className="grid grid-cols-2 gap-3">
+            {studyOverviewItems.map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                {isStudyOverviewLoading ? (
+                  <Skeleton className="mt-2 h-8 w-14 rounded-lg" />
+                ) : (
+                  <p className="mt-1 font-display text-2xl font-bold">{value ?? 0}</p>
+                )}
+              </div>
+            ))}
           </div>
         </SectionCard>
       </div>
@@ -343,7 +422,7 @@ function ProfilePage() {
         </SectionCard>
 
         <SectionCard title="Recent activity">
-          {!dashboard?.recentActivity.length ? (
+          {(dashboard?.recentActivity?.length ?? 0) === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
               <span className="grid size-11 place-items-center rounded-2xl bg-primary-soft text-primary">
                 <Sparkles className="size-5" />

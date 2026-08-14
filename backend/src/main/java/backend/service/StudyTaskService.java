@@ -22,10 +22,13 @@ public class StudyTaskService {
 
     private final StudyTaskRepository studyTaskRepository;
     private final StudentRepository studentRepository;
+    private final StudyStreakService studyStreakService;
 
-    public StudyTaskService(StudyTaskRepository studyTaskRepository, StudentRepository studentRepository) {
+    public StudyTaskService(StudyTaskRepository studyTaskRepository, StudentRepository studentRepository,
+            StudyStreakService studyStreakService) {
         this.studyTaskRepository = studyTaskRepository;
         this.studentRepository = studentRepository;
+        this.studyStreakService = studyStreakService;
     }
 
     @Transactional(readOnly = true)
@@ -44,7 +47,11 @@ public class StudyTaskService {
         StudyTask task = new StudyTask();
         task.setStudent(currentStudent());
         apply(task, request);
-        return StudyTaskResponse.from(studyTaskRepository.save(task));
+        StudyTask saved = studyTaskRepository.save(task);
+        if (saved.getStatus() == StudyTaskStatus.COMPLETED) {
+            studyStreakService.record(saved.getStudent(), backend.entity.StudyActivityType.TASK_COMPLETED);
+        }
+        return StudyTaskResponse.from(saved);
     }
 
     @Transactional
@@ -52,7 +59,11 @@ public class StudyTaskService {
         StudyTask task = studyTaskRepository.findByIdAndStudent(id, currentStudent())
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
         apply(task, request);
-        return StudyTaskResponse.from(studyTaskRepository.save(task));
+        StudyTask saved = studyTaskRepository.save(task);
+        if (saved.getStatus() == StudyTaskStatus.COMPLETED) {
+            studyStreakService.record(saved.getStudent(), backend.entity.StudyActivityType.TASK_COMPLETED);
+        }
+        return StudyTaskResponse.from(saved);
     }
 
     @Transactional
@@ -60,7 +71,11 @@ public class StudyTaskService {
         StudyTask task = studyTaskRepository.findByIdAndStudent(id, currentStudent())
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
         task.setStatus(task.getStatus() == StudyTaskStatus.COMPLETED ? StudyTaskStatus.TODO : StudyTaskStatus.COMPLETED);
-        return StudyTaskResponse.from(studyTaskRepository.save(task));
+        StudyTask saved = studyTaskRepository.save(task);
+        if (saved.getStatus() == StudyTaskStatus.COMPLETED) {
+            studyStreakService.record(saved.getStudent(), backend.entity.StudyActivityType.TASK_COMPLETED);
+        }
+        return StudyTaskResponse.from(saved);
     }
 
     @Transactional

@@ -30,12 +30,24 @@ export type StudyProgress = {
   components: { label: string; percent: number }[];
 };
 
+export type StudyOverview = {
+  learningMaterials: number;
+  summaries: number;
+  smartNotes: number;
+  flashcardDecks: number;
+  quizzesCompleted: number;
+  currentStreak: number;
+};
+
 export type DashboardData = {
   quizStats: QuizStats;
   flashcardStats: FlashcardStats;
   recentMaterials: LearningMaterial[];
   recentActivity: RecentActivity[];
   studyProgress: StudyProgress;
+  studyStreak: number;
+  studiedToday: boolean;
+  studyOverview: StudyOverview;
 };
 
 export async function getDashboard() {

@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { getDashboard } from "@/api/dashboardApi";
 
 export const navItems = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -29,6 +31,11 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { student, logout } = useAuth();
+  const { data: dashboard } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: getDashboard,
+    enabled: Boolean(student),
+  });
 
   return (
     <aside
@@ -86,8 +93,12 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
         {!collapsed && (
           <div className="mb-3 rounded-xl bg-sidebar-accent/70 p-3">
             <p className="text-xs font-semibold text-sidebar-accent-foreground">Study streak</p>
-            <p className="mt-1 font-display text-2xl font-bold text-sidebar-primary">18 days</p>
-            <p className="text-[11px] text-muted-foreground">Keep it alive — 20 min today</p>
+            <p className="mt-1 font-display text-2xl font-bold text-sidebar-primary">
+              {dashboard?.studyStreak ?? 0} {dashboard?.studyStreak === 1 ? "day" : "days"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {dashboard?.studiedToday ? "Keep it going!" : "Study today to keep it alive"}
+            </p>
           </div>
         )}
         <div className={cn("flex items-center gap-2", collapsed && "flex-col")}>

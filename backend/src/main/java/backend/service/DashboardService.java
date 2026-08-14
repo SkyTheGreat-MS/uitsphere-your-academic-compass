@@ -47,6 +47,7 @@ public class DashboardService {
     private final SmartNoteRepository smartNoteRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final StudyTaskRepository studyTaskRepository;
+    private final StudyStreakService studyStreakService;
 
     public DashboardService(
             StudentRepository studentRepository,
@@ -59,7 +60,8 @@ public class DashboardService {
             SummaryRepository summaryRepository,
             SmartNoteRepository smartNoteRepository,
             ChatSessionRepository chatSessionRepository,
-            StudyTaskRepository studyTaskRepository) {
+            StudyTaskRepository studyTaskRepository,
+            StudyStreakService studyStreakService) {
         this.studentRepository = studentRepository;
         this.quizAttemptRepository = quizAttemptRepository;
         this.quizRepository = quizRepository;
@@ -71,6 +73,7 @@ public class DashboardService {
         this.smartNoteRepository = smartNoteRepository;
         this.chatSessionRepository = chatSessionRepository;
         this.studyTaskRepository = studyTaskRepository;
+        this.studyStreakService = studyStreakService;
     }
 
     @Transactional(readOnly = true)
@@ -88,7 +91,20 @@ public class DashboardService {
         List<DashboardResponse.RecentActivity> recentActivity = buildRecentActivity(student);
         DashboardResponse.StudyProgress studyProgress = buildStudyProgress(student, quizStats, flashcardStats);
 
-        return new DashboardResponse(quizStats, flashcardStats, recentMaterials, recentActivity, studyProgress);
+        int currentStreak = studyStreakService.currentStreak(student);
+        return new DashboardResponse(quizStats, flashcardStats, recentMaterials, recentActivity, studyProgress,
+                currentStreak, studyStreakService.studiedToday(student),
+                new DashboardResponse.StudyOverview(
+                        allMaterialsCount(student),
+                        summaryRepository.findByStudentOrderByUpdatedAtDesc(student).size(),
+                        smartNoteRepository.findByStudentOrderByUpdatedAtDesc(student).size(),
+                        flashcardDeckRepository.findByStudentOrderByUpdatedAtDesc(student).size(),
+                        quizStats.completed(),
+                        currentStreak));
+    }
+
+    private int allMaterialsCount(Student student) {
+        return learningMaterialRepository.findByStudentOrderByCreatedAtDesc(student).size();
     }
 
     private DashboardResponse.QuizStats buildQuizStats(Student student) {

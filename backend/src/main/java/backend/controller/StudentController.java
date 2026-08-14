@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import backend.dto.LoginRequest;
 import backend.dto.LoginResponse;
 import backend.dto.UpdateProfileRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -47,6 +48,16 @@ public class StudentController {
     @PutMapping("/profile")
     public StudentDTO updateProfile(@Valid @RequestBody UpdateProfileRequest updates) {
         return studentService.updateCurrentStudent(updates);
+    }
+
+    @PostMapping("/profile/avatar")
+    public StudentDTO uploadAvatar(@RequestParam("file") MultipartFile file) {
+        return studentService.uploadAvatar(file);
+    }
+
+    @DeleteMapping("/profile/avatar")
+    public StudentDTO removeAvatar() {
+        return studentService.removeAvatar();
     }
 
     @PostMapping("/login")

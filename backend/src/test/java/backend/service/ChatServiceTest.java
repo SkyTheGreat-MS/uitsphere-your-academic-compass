@@ -21,10 +21,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,6 +51,9 @@ class ChatServiceTest {
 
     @Mock
     private GroqService groqService;
+
+    @Mock
+    private StudyStreakService studyStreakService;
 
     @AfterEach
     void clearAuthentication() {
@@ -95,7 +100,8 @@ class ChatServiceTest {
                 materialRepository,
                 studentRepository,
                 materialContextService,
-                groqService);
+                groqService,
+                studyStreakService);
 
         var response = service.sendMessage(new ChatMessageRequest(1L, "Why is it useful?", null));
 
@@ -103,5 +109,25 @@ class ChatServiceTest {
         assertThat(response.content()).isEqualTo("It reduces coupling.");
         verify(groqService).ask(eq("Why is it useful?"), contains("What is dependency injection?"));
         verify(messageRepository, times(2)).save(any(ChatMessage.class));
+        verify(studyStreakService).record(student, backend.entity.StudyActivityType.AI_TUTOR);
+    }
+
+    @Test
+    void doesNotRecordStudyActivityWhenAiRequestFails() {
+        Student student = new Student();
+        ChatSession session = new ChatSession();
+        session.setStudent(student);
+        when(studentRepository.findByEmail("student@example.com")).thenReturn(Optional.of(student));
+        when(sessionRepository.findByIdAndStudent(any(), eq(student))).thenReturn(Optional.of(session));
+        when(groqService.ask(eq("Explain recursion"), any())).thenThrow(new RuntimeException("AI unavailable"));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("student@example.com", null));
+
+        ChatService service = new ChatService(sessionRepository, messageRepository, materialRepository,
+                studentRepository, materialContextService, groqService, studyStreakService);
+
+        assertThatThrownBy(() -> service.sendMessage(new ChatMessageRequest(1L, "Explain recursion", null)))
+                .isInstanceOf(RuntimeException.class);
+        verify(studyStreakService, never()).record(any(), any());
     }
 }

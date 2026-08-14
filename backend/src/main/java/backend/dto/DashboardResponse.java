@@ -7,7 +7,10 @@ public record DashboardResponse(
         FlashcardStats flashcardStats,
         List<LearningMaterialResponse> recentMaterials,
         List<RecentActivity> recentActivity,
-        StudyProgress studyProgress) {
+        StudyProgress studyProgress,
+        int studyStreak,
+        boolean studiedToday,
+        StudyOverview studyOverview) {
 
     public record QuizStats(
             int completed,
@@ -29,5 +32,14 @@ public record DashboardResponse(
 
         public record Component(String label, int percent) {
         }
+    }
+
+    public record StudyOverview(
+            int learningMaterials,
+            int summaries,
+            int smartNotes,
+            int flashcardDecks,
+            int quizzesCompleted,
+            int currentStreak) {
     }
 }

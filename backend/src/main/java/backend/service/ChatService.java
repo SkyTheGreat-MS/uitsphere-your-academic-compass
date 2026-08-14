@@ -16,6 +16,7 @@ import backend.repository.LearningMaterialRepository;
 import backend.repository.StudentRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class ChatService {
     private final StudentRepository studentRepository;
     private final MaterialContextService materialContextService;
     private final GroqService groqService;
+    private final StudyStreakService studyStreakService;
 
     public ChatService(
             ChatSessionRepository sessionRepository,
@@ -35,13 +37,15 @@ public class ChatService {
             LearningMaterialRepository materialRepository,
             StudentRepository studentRepository,
             MaterialContextService materialContextService,
-            GroqService groqService) {
+            GroqService groqService,
+            StudyStreakService studyStreakService) {
         this.sessionRepository = sessionRepository;
         this.messageRepository = messageRepository;
         this.materialRepository = materialRepository;
         this.studentRepository = studentRepository;
         this.materialContextService = materialContextService;
         this.groqService = groqService;
+        this.studyStreakService = studyStreakService;
     }
 
     public ChatSessionResponse createSession(CreateChatSessionRequest request) {
@@ -80,12 +84,16 @@ public class ChatService {
                 .toList();
     }
 
+    @Transactional
     public ChatMessageResponse sendMessage(ChatMessageRequest request) {
         ChatSession session = ownedSession(request.sessionId());
         if (request.materialIds() != null) {
             updateSessionMaterials(session, request.materialIds());
         }
         String question = request.message().strip();
+        if (question.isEmpty()) {
+            throw new ChatException("Message cannot be empty.");
+        }
 
         ChatMessage userMessage = new ChatMessage();
         userMessage.setSession(session);
@@ -113,6 +121,7 @@ public class ChatService {
 
         session.touch();
         sessionRepository.save(session);
+        studyStreakService.record(session.getStudent(), backend.entity.StudyActivityType.AI_TUTOR);
         return ChatMessageResponse.from(savedAssistant);
     }
 

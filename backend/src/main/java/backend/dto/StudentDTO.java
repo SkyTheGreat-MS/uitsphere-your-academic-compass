@@ -16,6 +16,7 @@ public class StudentDTO {
     private String section;
     private String bio;
     private String avatarInitials;
+    private String avatarUrl;
 
 
     public StudentDTO() {
@@ -87,4 +88,6 @@ public class StudentDTO {
     public void setBio(String bio) { this.bio = bio; }
     public String getAvatarInitials() { return avatarInitials; }
     public void setAvatarInitials(String avatarInitials) { this.avatarInitials = avatarInitials; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 }

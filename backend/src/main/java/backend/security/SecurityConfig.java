@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/students/login",
                                 "/students/register",
+                                "/uploads/**",
                                 "/error"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/students")
