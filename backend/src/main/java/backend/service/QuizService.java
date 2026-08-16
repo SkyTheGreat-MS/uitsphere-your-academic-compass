@@ -41,6 +41,7 @@ public class QuizService {
     private final AIContentGenerationService generationService;
     private final QuizResponseParser responseParser;
     private final StudyStreakService studyStreakService;
+    private final NotificationService notificationService;
 
     public QuizService(
             QuizRepository quizRepository,
@@ -49,7 +50,8 @@ public class QuizService {
             QuizAnswerRepository answerRepository,
             StudentRepository studentRepository,
             AIContentGenerationService generationService,
-            QuizResponseParser responseParser, StudyStreakService studyStreakService) {
+            QuizResponseParser responseParser, StudyStreakService studyStreakService,
+            NotificationService notificationService) {
         this.quizRepository = quizRepository;
         this.questionRepository = questionRepository;
         this.attemptRepository = attemptRepository;
@@ -58,6 +60,7 @@ public class QuizService {
         this.generationService = generationService;
         this.responseParser = responseParser;
         this.studyStreakService = studyStreakService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -193,6 +196,13 @@ public class QuizService {
         attempt.setCompletedAt(LocalDateTime.now());
         attemptRepository.save(attempt);
         studyStreakService.record(student, backend.entity.StudyActivityType.QUIZ_COMPLETED);
+        int percent = Math.round(100f * correctCount / Math.max(1, totalQuestions));
+        notificationService.notify(
+                student,
+                "quiz",
+                "Quiz completed",
+                "You scored " + percent + "% on \"" + attempt.getQuiz().getTitle() + "\".",
+                "/studio");
 
         List<QuizReviewItemResponse> review = new ArrayList<>();
         for (QuizQuestion question : questions) {

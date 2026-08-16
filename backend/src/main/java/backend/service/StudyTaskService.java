@@ -23,12 +23,14 @@ public class StudyTaskService {
     private final StudyTaskRepository studyTaskRepository;
     private final StudentRepository studentRepository;
     private final StudyStreakService studyStreakService;
+    private final NotificationService notificationService;
 
     public StudyTaskService(StudyTaskRepository studyTaskRepository, StudentRepository studentRepository,
-            StudyStreakService studyStreakService) {
+            StudyStreakService studyStreakService, NotificationService notificationService) {
         this.studyTaskRepository = studyTaskRepository;
         this.studentRepository = studentRepository;
         this.studyStreakService = studyStreakService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -51,6 +53,7 @@ public class StudyTaskService {
         if (saved.getStatus() == StudyTaskStatus.COMPLETED) {
             studyStreakService.record(saved.getStudent(), backend.entity.StudyActivityType.TASK_COMPLETED);
         }
+        notifyIfDueToday(saved);
         return StudyTaskResponse.from(saved);
     }
 
@@ -63,6 +66,7 @@ public class StudyTaskService {
         if (saved.getStatus() == StudyTaskStatus.COMPLETED) {
             studyStreakService.record(saved.getStudent(), backend.entity.StudyActivityType.TASK_COMPLETED);
         }
+        notifyIfDueToday(saved);
         return StudyTaskResponse.from(saved);
     }
 
@@ -110,6 +114,17 @@ public class StudyTaskService {
         } catch (DateTimeParseException e) {
             return null;
         }
+    }
+
+    private void notifyIfDueToday(StudyTask task) {
+        if (task.getStatus() != StudyTaskStatus.TODO) return;
+        if (task.getDueDate() == null || !task.getDueDate().equals(LocalDate.now())) return;
+        notificationService.notify(
+                task.getStudent(),
+                "task",
+                "Study task due today",
+                "\"" + task.getTitle() + "\" is due today.",
+                "/planner");
     }
 
     private Student currentStudent() {

@@ -224,10 +224,3 @@ export const profileActivity = [
   { id: "pa4", label: "Reported a found item", when: "Yesterday, 13:10", detail: "Lost & Found" },
   { id: "pa5", label: "Finished study goal — matrix decompositions", when: "2 days ago", detail: "7 / 8 h" },
 ];
-
-export const notifications = [
-  { id: "nt1", title: "Coursework deadline moved", body: "Enterprise Java milestone now due Friday 17:00", when: "12m" },
-  { id: "nt2", title: "Possible match found", body: "Your laptop sleeve may have been handed in", when: "1h" },
-  { id: "nt3", title: "Study streak at risk", body: "Log 20 minutes today to keep your 18-day streak", when: "3h" },
-  { id: "nt4", title: "Quiz results ready", body: "Network Design quiz — 86% (+5 vs last week)", when: "Yesterday" },
-];

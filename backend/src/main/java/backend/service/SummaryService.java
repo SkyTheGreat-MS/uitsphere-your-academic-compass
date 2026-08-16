@@ -17,14 +17,17 @@ public class SummaryService {
     private final SummaryRepository summaryRepository;
     private final StudentRepository studentRepository;
     private final AIContentGenerationService generationService;
+    private final NotificationService notificationService;
 
     public SummaryService(
             SummaryRepository summaryRepository,
             StudentRepository studentRepository,
-            AIContentGenerationService generationService) {
+            AIContentGenerationService generationService,
+            NotificationService notificationService) {
         this.summaryRepository = summaryRepository;
         this.studentRepository = studentRepository;
         this.generationService = generationService;
+        this.notificationService = notificationService;
     }
 
     public SummaryResponse generate(SummaryGenerateRequest request) {
@@ -37,7 +40,14 @@ public class SummaryService {
         summary.setTitle(materialIds.size() == 1 ? "Lecture summary" : "Combined lecture summary");
         summary.setContent(content);
         summary.setMaterialIds(materialIds);
-        return SummaryResponse.from(summaryRepository.save(summary));
+        Summary saved = summaryRepository.save(summary);
+        notificationService.notify(
+                student,
+                "summary",
+                "Summary generated",
+                "A summary for your lecture is ready to review.",
+                "/studio");
+        return SummaryResponse.from(saved);
     }
 
     public List<SummaryResponse> list() {

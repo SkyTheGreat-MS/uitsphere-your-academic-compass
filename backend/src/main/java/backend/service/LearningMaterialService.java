@@ -29,16 +29,19 @@ public class LearningMaterialService {
     private final LearningMaterialRepository materialRepository;
     private final StudentRepository studentRepository;
     private final DocumentProcessingService documentProcessingService;
+    private final NotificationService notificationService;
     private final Path storageRoot;
 
     public LearningMaterialService(
             LearningMaterialRepository materialRepository,
             StudentRepository studentRepository,
             DocumentProcessingService documentProcessingService,
+            NotificationService notificationService,
             @Value("${file.upload-dir:uploads}") String storagePath) {
         this.materialRepository = materialRepository;
         this.studentRepository = studentRepository;
         this.documentProcessingService = documentProcessingService;
+        this.notificationService = notificationService;
         this.storageRoot = Path.of(storagePath).toAbsolutePath().normalize();
     }
 
@@ -91,6 +94,14 @@ public class LearningMaterialService {
             } else if (fileType == LearningMaterialFileType.IMAGE) {
                 log.info("[OCR] Saved extracted text successfully for materialId={}",
                         material.getId());
+            }
+            if (processingResult.successful()) {
+                notificationService.notify(
+                        student,
+                        "lecture",
+                        "Lecture processed successfully",
+                        "\"" + originalFileName + "\" is ready for review.",
+                        "/studio");
             }
             return LearningMaterialResponse.from(materialRepository.save(material));
         } catch (LearningMaterialException ex) {

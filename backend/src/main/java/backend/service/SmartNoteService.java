@@ -15,21 +15,32 @@ public class SmartNoteService {
     private final SmartNoteRepository repository;
     private final StudentRepository studentRepository;
     private final AIContentGenerationService generationService;
+    private final NotificationService notificationService;
 
-    public SmartNoteService(SmartNoteRepository repository, StudentRepository studentRepository, AIContentGenerationService generationService) {
+    public SmartNoteService(SmartNoteRepository repository, StudentRepository studentRepository,
+            AIContentGenerationService generationService, NotificationService notificationService) {
         this.repository = repository;
         this.studentRepository = studentRepository;
         this.generationService = generationService;
+        this.notificationService = notificationService;
     }
 
     public SmartNoteResponse generate(SmartNoteGenerateRequest request) {
+        Student student = currentStudent();
         List<Long> materialIds = request.materialIds().stream().distinct().toList();
         SmartNote note = new SmartNote();
-        note.setStudent(currentStudent());
+        note.setStudent(student);
         note.setTitle(materialIds.size() == 1 ? "Lecture smart notes" : "Combined lecture smart notes");
         note.setContent(generationService.generateSmartNotes(materialIds));
         note.setMaterialIds(materialIds);
-        return SmartNoteResponse.from(repository.save(note));
+        SmartNoteResponse response = SmartNoteResponse.from(repository.save(note));
+        notificationService.notify(
+                student,
+                "notes",
+                "Smart notes generated",
+                "Smart notes for your lecture are ready to review.",
+                "/studio");
+        return response;
     }
 
     public List<SmartNoteResponse> list() {

@@ -33,6 +33,7 @@ public class FlashcardService {
     private final AIContentGenerationService generationService;
     private final FlashcardResponseParser responseParser;
     private final StudyStreakService studyStreakService;
+    private final NotificationService notificationService;
 
     public FlashcardService(
             FlashcardDeckRepository deckRepository,
@@ -40,7 +41,8 @@ public class FlashcardService {
             FlashcardProgressRepository progressRepository,
             StudentRepository studentRepository,
             AIContentGenerationService generationService,
-            FlashcardResponseParser responseParser, StudyStreakService studyStreakService) {
+            FlashcardResponseParser responseParser, StudyStreakService studyStreakService,
+            NotificationService notificationService) {
         this.deckRepository = deckRepository;
         this.flashcardRepository = flashcardRepository;
         this.progressRepository = progressRepository;
@@ -48,6 +50,7 @@ public class FlashcardService {
         this.generationService = generationService;
         this.responseParser = responseParser;
         this.studyStreakService = studyStreakService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -76,6 +79,13 @@ public class FlashcardService {
             flashcardRepository.save(card);
             cardResponses.add(FlashcardResponse.from(card, false));
         }
+
+        notificationService.notify(
+                student,
+                "flashcards",
+                "Flashcards generated",
+                "\"" + deck.getTitle() + "\" is ready to review.",
+                "/studio");
 
         return FlashcardDeckDetailResponse.from(deck, cardResponses, 0);
     }
