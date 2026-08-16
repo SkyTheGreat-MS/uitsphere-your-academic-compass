@@ -16,7 +16,7 @@ import {
   XCircle,
   ImagePlus,
 } from "lucide-react";
-import { AppShell, PageHeader } from "@/components/layout/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -727,12 +727,6 @@ function LostFoundPage() {
     enabled: browseType !== undefined,
   });
 
-  const { data: allPosts = [] } = useQuery({
-    queryKey: ["lost-found", "browse", "ALL", "All", ""],
-    queryFn: () => browseLostFound({}),
-    staleTime: 30_000,
-  });
-
   const { data: myReports = [] } = useQuery({
     queryKey: ["lost-found", "mine"],
     queryFn: getMyReports,
@@ -747,9 +741,6 @@ function LostFoundPage() {
     void queryClient.invalidateQueries({ queryKey: ["lost-found"] });
     void queryClient.invalidateQueries({ queryKey: ["notifications"] });
   };
-
-  const lostCount = allPosts.filter((p) => p.type === "LOST").length;
-  const foundCount = allPosts.filter((p) => p.type === "FOUND").length;
 
   const startEdit = (item: LostFoundPost) => {
     setEditing(item);
@@ -851,36 +842,60 @@ function LostFoundPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Lost & Found" description={`${lostCount} lost · ${foundCount} found`} />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          Helping students reunite with their belongings.
+        </p>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Button
+            className="rounded-xl"
+            onClick={() => {
+              setForm((current) => ({ ...current, type: "LOST" }));
+              setTab("report");
+            }}
+          >
+            <Plus className="size-4" /> Report Lost
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => {
+              setForm((current) => ({ ...current, type: "FOUND" }));
+              setTab("report");
+            }}
+          >
+            <Plus className="size-4" /> Report Found
+          </Button>
+        </div>
+      </div>
+
+      {(tab === "lost" || tab === "found") && (
+        <div className="relative mb-6">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search items…"
+            className="h-11 w-full rounded-xl bg-card pl-10"
+          />
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
-        <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
-          <TabsList className="rounded-xl">
-            <TabsTrigger value="lost" className="rounded-lg">
-              Lost items
-            </TabsTrigger>
-            <TabsTrigger value="found" className="rounded-lg">
-              Found items
-            </TabsTrigger>
-            <TabsTrigger value="report" className="rounded-lg">
-              Report item
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="rounded-lg">
-              My activity
-            </TabsTrigger>
-          </TabsList>
-          {(tab === "lost" || tab === "found") && (
-            <div className="relative lg:max-w-xs lg:justify-self-end">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search items…"
-                className="h-10 rounded-xl bg-card pl-9"
-              />
-            </div>
-          )}
-        </div>
+        <TabsList className="rounded-xl">
+          <TabsTrigger value="lost" className="rounded-lg">
+            Lost items
+          </TabsTrigger>
+          <TabsTrigger value="found" className="rounded-lg">
+            Found items
+          </TabsTrigger>
+          <TabsTrigger value="report" className="rounded-lg">
+            Report item
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="rounded-lg">
+            My activity
+          </TabsTrigger>
+        </TabsList>
 
         {(tab === "lost" || tab === "found") && (
           <div className="mt-4 flex flex-wrap gap-2">
