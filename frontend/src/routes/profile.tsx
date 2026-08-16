@@ -239,15 +239,6 @@ function ProfilePage() {
               </div>
             </div>
           </div>
-          <Button
-            variant="outline"
-            className="shrink-0 rounded-xl"
-            onClick={() =>
-              toast("Export requested", { description: "Your study data would be downloaded." })
-            }
-          >
-            <Download className="size-4" /> Export data
-          </Button>
         </div>
       </Card>
 
