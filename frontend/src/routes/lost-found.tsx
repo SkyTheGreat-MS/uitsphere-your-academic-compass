@@ -17,6 +17,7 @@ import {
   ImagePlus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { DatePickerField } from "@/components/common/DatePicker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -639,12 +640,10 @@ function ReportForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="lf-date">Date</Label>
-            <Input
+            <DatePickerField
               id="lf-date"
-              type="date"
-              className="h-11 rounded-xl"
               value={form.date}
-              onChange={(e) => setForm({ date: e.target.value })}
+              onChange={(date) => setForm({ date: date ?? "" })}
             />
           </div>
         </div>

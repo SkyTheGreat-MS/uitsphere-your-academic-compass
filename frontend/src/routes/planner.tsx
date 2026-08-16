@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ButtonHTMLAttributes } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -18,20 +18,20 @@ import {
   GraduationCap,
   MapPin,
   FileText,
-  X,
   NotebookPen,
   Layers,
   Loader2,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { SectionCard, EmptyState, PriorityBadge } from "@/components/common/Primitives";
+import { DatePickerField, PickerTrigger } from "@/components/common/DatePicker";
+import { fromISODate, toISODate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
@@ -106,18 +106,6 @@ function formatDayLabel(date: Date) {
 
 function weekdayOf(date: Date) {
   return WEEKDAY_NAMES[date.getDay()];
-}
-
-function toISODate(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function fromISODate(value: string) {
-  const [y, m, d] = value.split("-").map(Number);
-  return new Date(y, m - 1, d);
 }
 
 function addDays(date: Date, amount: number) {
@@ -831,99 +819,6 @@ function formatTime(value: string) {
   const period = h >= 12 ? "PM" : "AM";
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:${String(m).padStart(2, "0")} ${period}`;
-}
-
-function formatFullDate(value: string) {
-  const date = fromISODate(value);
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
-function PickerTrigger({
-  children,
-  onClear,
-  className,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
-  onClear?: () => void;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-1 rounded-xl border border-input bg-background px-3 transition-colors hover:bg-accent/50 focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
-        className,
-      )}
-    >
-      <button
-        type="button"
-        className="flex h-11 min-w-0 flex-1 cursor-pointer items-center gap-2 text-left text-sm font-medium focus:outline-none"
-        {...props}
-      >
-        {children}
-      </button>
-      {onClear && (
-        <button
-          type="button"
-          onClick={onClear}
-          aria-label="Clear selection"
-          className="grid size-5 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          <X className="size-3.5" />
-        </button>
-      )}
-    </div>
-  );
-}
-
-function DatePickerField({
-  id,
-  value,
-  onChange,
-}: {
-  id?: string;
-  value: string | null | undefined;
-  onChange: (value: string | null) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const selected = value ? fromISODate(value) : undefined;
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <PickerTrigger
-          id={id}
-          aria-label={value ? `Due date, ${formatFullDate(value)}` : "No due date"}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          onClear={value ? () => onChange(null) : undefined}
-        >
-          <CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          {value ? (
-            <span className="truncate">{formatFullDate(value)}</span>
-          ) : (
-            <span className="truncate text-muted-foreground">No date selected</span>
-          )}
-        </PickerTrigger>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-auto rounded-xl border-border bg-popover p-1 shadow-md"
-      >
-        <Calendar
-          mode="single"
-          selected={selected}
-          onSelect={(date) => {
-            onChange(date ? toISODate(date) : null);
-            setOpen(false);
-          }}
-          autoFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
 }
 
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];

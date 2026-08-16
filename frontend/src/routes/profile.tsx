@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { SectionCard } from "@/components/common/Primitives";
+import { AvatarCropper } from "@/components/common/AvatarCropper";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ function ProfilePage() {
   const [form, setForm] = useState<Student>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isAvatarSaving, setIsAvatarSaving] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { data: dashboard } = useQuery({
     queryKey: ["dashboard"],
@@ -131,7 +133,7 @@ function ProfilePage() {
     ["Study streak", studyOverview?.currentStreak],
   ] as const;
 
-  const handleAvatarUpload = async (file?: File) => {
+  const handleAvatarPick = (file?: File) => {
     if (!file) return;
     const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
@@ -142,17 +144,23 @@ function ProfilePage() {
       toast.error("Image is too large", { description: "Profile images must be 5 MB or smaller." });
       return;
     }
+    setCropSrc(URL.createObjectURL(file));
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  };
+
+  const handleAvatarSave = async (file: File) => {
     setIsAvatarSaving(true);
     try {
       const saved = await uploadAvatar(file);
       await updateStudent(saved);
       setForm(saved);
       toast.success("Profile photo updated");
+      setCropSrc(null);
     } catch {
       toast.error("Unable to upload profile photo");
+      setCropSrc(null);
     } finally {
       setIsAvatarSaving(false);
-      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -179,50 +187,49 @@ function ProfilePage() {
 
       <Card className="relative gap-0 overflow-hidden rounded-3xl border-border p-0 shadow-soft">
         <div className="h-28 gradient-brand" />
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-6 pb-6 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="flex min-w-0 items-end gap-4">
-            <div className="relative -mt-10 shrink-0">
-              <Avatar className="size-20 ring-4 ring-card">
-                <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
-                <AvatarFallback className="gradient-brand text-xl font-bold text-primary-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(event) => void handleAvatarUpload(event.target.files?.[0])}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="absolute -bottom-1 -right-1 size-8 rounded-full border-background bg-background shadow-sm hover:bg-muted"
-                disabled={isAvatarSaving}
-                aria-label={student.avatarUrl ? "Change profile photo" : "Upload profile photo"}
-                onClick={() => avatarInputRef.current?.click()}
-              >
-                {isAvatarSaving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Upload className="size-4" />
-                )}
-              </Button>
-              {student.avatarUrl && (
+        <div className="px-6 pb-6">
+          <div className="flex flex-wrap items-end gap-x-5 gap-y-4 sm:flex-nowrap">
+            <div className="shrink-0">
+              <div className="-mt-10">
+                <Avatar className="size-20 ring-4 ring-card">
+                  <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
+                  <AvatarFallback className="gradient-brand text-xl font-bold text-primary-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="absolute -bottom-1 -right-11 size-8 rounded-full border-background bg-background text-destructive shadow-sm hover:bg-muted hover:text-destructive"
+                  size="sm"
+                  className="h-9 rounded-xl"
                   disabled={isAvatarSaving}
-                  aria-label="Remove profile photo"
-                  onClick={() => void handleAvatarRemove()}
+                  aria-label={student.avatarUrl ? "Change profile photo" : "Upload profile photo"}
+                  onClick={() => avatarInputRef.current?.click()}
                 >
-                  <Trash2 className="size-4" />
+                  {isAvatarSaving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Upload className="size-4" />
+                  )}
+                  {student.avatarUrl ? "Change Photo" : "Upload Photo"}
                 </Button>
-              )}
+                {student.avatarUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 rounded-xl text-destructive hover:bg-muted hover:text-destructive"
+                    disabled={isAvatarSaving}
+                    aria-label="Remove profile photo"
+                    onClick={() => void handleAvatarRemove()}
+                  >
+                    <Trash2 className="size-4" />
+                    Remove Photo
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="min-w-0 pb-1">
               <h2 className="truncate text-xl font-bold">{student.name}</h2>
@@ -241,6 +248,26 @@ function ProfilePage() {
           </div>
         </div>
       </Card>
+
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={(event) => handleAvatarPick(event.target.files?.[0])}
+      />
+
+      {cropSrc && (
+        <AvatarCropper
+          imageSrc={cropSrc}
+          onCancel={() => {
+            URL.revokeObjectURL(cropSrc);
+            setCropSrc(null);
+          }}
+          onSave={(file) => void handleAvatarSave(file)}
+          saving={isAvatarSaving}
+        />
+      )}
 
       <div className="mt-6 grid gap-4 xl:grid-cols-3">
         <SectionCard
