@@ -17,6 +17,7 @@ import {
   Sparkles,
   Upload,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { SectionCard } from "@/components/common/Primitives";
@@ -102,6 +103,7 @@ function ProfilePage() {
       .join("")
       .toUpperCase() || "ST";
   const set = (updates: Partial<typeof form>) => setForm((current) => ({ ...current, ...updates }));
+
   const avatarSrc = student.avatarUrl ? `http://localhost:8080${student.avatarUrl}` : undefined;
   const departmentOptions = Array.from(
     new Set([
@@ -115,7 +117,9 @@ function ProfilePage() {
       "Business Information Systems",
     ]),
   );
-  const batchOptions = Array.from(new Set([...(form.batch ? [form.batch] : []), "9", "10", "11", "12", "13"]));
+  const batchOptions = Array.from(
+    new Set([...(form.batch ? [form.batch] : []), "9", "10", "11", "12", "13"]),
+  );
   const studyOverview = dashboard?.studyOverview;
   const isStudyOverviewLoading = !dashboard;
   const studyOverviewItems = [
@@ -151,6 +155,21 @@ function ProfilePage() {
       if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
+
+  const handleAvatarRemove = async () => {
+    setIsAvatarSaving(true);
+    try {
+      const saved = await removeAvatar();
+      await updateStudent(saved);
+      setForm(saved);
+      toast.success("Profile photo removed");
+    } catch {
+      toast.error("Unable to remove profile photo");
+    } finally {
+      setIsAvatarSaving(false);
+    }
+  };
+
   return (
     <AppShell>
       <PageHeader
@@ -162,12 +181,49 @@ function ProfilePage() {
         <div className="h-28 gradient-brand" />
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 px-6 pb-6 sm:flex sm:flex-wrap sm:justify-between">
           <div className="flex min-w-0 items-end gap-4">
-            <Avatar className="-mt-10 size-20 shrink-0 ring-4 ring-card">
-              <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
-              <AvatarFallback className="gradient-brand text-xl font-bold text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative -mt-10 shrink-0">
+              <Avatar className="size-20 ring-4 ring-card">
+                <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
+                <AvatarFallback className="gradient-brand text-xl font-bold text-primary-foreground">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(event) => void handleAvatarUpload(event.target.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="absolute -bottom-1 -right-1 size-8 rounded-full border-background bg-background shadow-sm hover:bg-muted"
+                disabled={isAvatarSaving}
+                aria-label={student.avatarUrl ? "Change profile photo" : "Upload profile photo"}
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                {isAvatarSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Upload className="size-4" />
+                )}
+              </Button>
+              {student.avatarUrl && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="absolute -bottom-1 -right-11 size-8 rounded-full border-background bg-background text-destructive shadow-sm hover:bg-muted hover:text-destructive"
+                  disabled={isAvatarSaving}
+                  aria-label="Remove profile photo"
+                  onClick={() => void handleAvatarRemove()}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </div>
             <div className="min-w-0 pb-1">
               <h2 className="truncate text-xl font-bold">{student.name}</h2>
               <p className="truncate text-sm text-muted-foreground">
@@ -231,60 +287,6 @@ function ProfilePage() {
               }
             }}
           >
-            <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-              <Avatar className="size-14 shrink-0">
-                <AvatarImage src={avatarSrc} alt={`${student.name ?? "Student"} profile`} />
-                <AvatarFallback className="gradient-brand text-sm font-bold text-primary-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <Label>Profile photo</Label>
-                <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, JPEG, or WEBP up to 5 MB.</p>
-              </div>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(event) => void handleAvatarUpload(event.target.files?.[0])}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="ml-auto rounded-xl"
-                disabled={isAvatarSaving}
-                onClick={() => avatarInputRef.current?.click()}
-              >
-                <Upload className="size-4" />
-                {isAvatarSaving ? "Uploading..." : student.avatarUrl ? "Change photo" : "Upload photo"}
-              </Button>
-              {student.avatarUrl && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-xl text-destructive hover:text-destructive"
-                  disabled={isAvatarSaving}
-                  aria-label="Remove profile photo"
-                  onClick={async () => {
-                    setIsAvatarSaving(true);
-                    try {
-                      const saved = await removeAvatar();
-                      await updateStudent(saved);
-                      setForm(saved);
-                      toast.success("Profile photo removed");
-                    } catch {
-                      toast.error("Unable to remove profile photo");
-                    } finally {
-                      setIsAvatarSaving(false);
-                    }
-                  }}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </div>
             <div className="space-y-2">
               <Label htmlFor="p-name">Full name</Label>
               <Input
@@ -316,7 +318,9 @@ function ProfilePage() {
               <Label htmlFor="p-dept">Department</Label>
               <Select
                 value={form.department ?? ""}
-                onValueChange={(department) => set({ department })}
+                onValueChange={(department) => {
+                  if (department) set({ department });
+                }}
               >
                 <SelectTrigger id="p-dept" className="h-11 rounded-xl">
                   <SelectValue placeholder="Select department" />
@@ -334,7 +338,9 @@ function ProfilePage() {
               <Label>Academic year</Label>
               <Select
                 value={form.year ? String(form.year) : ""}
-                onValueChange={(year) => set({ year: Number(year) })}
+                onValueChange={(year) => {
+                  if (year) set({ year: Number(year) });
+                }}
               >
                 <SelectTrigger className="h-11 rounded-xl">
                   <SelectValue placeholder="Select year" />
@@ -350,7 +356,12 @@ function ProfilePage() {
             </div>
             <div className="space-y-2">
               <Label>Batch</Label>
-              <Select value={form.batch ?? ""} onValueChange={(batch) => set({ batch })}>
+              <Select
+                value={form.batch ?? ""}
+                onValueChange={(batch) => {
+                  if (batch) set({ batch });
+                }}
+              >
                 <SelectTrigger className="h-11 rounded-xl">
                   <SelectValue placeholder="Select batch" />
                 </SelectTrigger>
