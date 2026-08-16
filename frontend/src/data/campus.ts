@@ -1,138 +1,3 @@
-export interface LostFoundItem {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  date: string;
-  status: "Lost" | "Found" | "Claimed";
-  category: string;
-  image: string;
-  reporter: string;
-}
-
-const img = (seed: string) => `https://picsum.photos/seed/${seed}/640/420`;
-
-export const lostItems: LostFoundItem[] = [
-  {
-    id: "l1",
-    title: "Black laptop sleeve (15\")",
-    description: "Padded sleeve with a small enamel pin of a rocket on the front pocket. Contains a USB-C charger.",
-    location: "Library, Level 3 quiet zone",
-    date: "10 Mar 2025",
-    status: "Lost",
-    category: "Electronics",
-    image: img("uit-sleeve"),
-    reporter: "Amara O.",
-  },
-  {
-    id: "l2",
-    title: "Student ID card — J. Feretti",
-    description: "University ID card, blue lanyard attached, slight crack in the top-right corner.",
-    location: "Block C corridor",
-    date: "09 Mar 2025",
-    status: "Lost",
-    category: "Documents",
-    image: img("uit-idcard"),
-    reporter: "Jonah F.",
-  },
-  {
-    id: "l3",
-    title: "Silver water bottle",
-    description: "Insulated 750 ml bottle covered in climbing club stickers.",
-    location: "Sports Centre changing rooms",
-    date: "08 Mar 2025",
-    status: "Lost",
-    category: "Personal",
-    image: img("uit-bottle"),
-    reporter: "Priya N.",
-  },
-  {
-    id: "l4",
-    title: "Scientific calculator",
-    description: "Casio fx-991EX with initials 'M.T.' written in marker on the back cover.",
-    location: "Engineering Block, room 12",
-    date: "07 Mar 2025",
-    status: "Lost",
-    category: "Academic",
-    image: img("uit-calc"),
-    reporter: "Mateo T.",
-  },
-];
-
-export const foundItems: LostFoundItem[] = [
-  {
-    id: "fi1",
-    title: "Set of keys with green fob",
-    description: "Three keys on a ring with a green rubber fob and a small bicycle key.",
-    location: "Handed in at Main Reception",
-    date: "10 Mar 2025",
-    status: "Found",
-    category: "Personal",
-    image: img("uit-keys"),
-    reporter: "Reception desk",
-  },
-  {
-    id: "fi2",
-    title: "Wireless earbuds case",
-    description: "White charging case, no earbuds inside, small scratch on the lid.",
-    location: "AI Lab 3",
-    date: "09 Mar 2025",
-    status: "Found",
-    category: "Electronics",
-    image: img("uit-earbuds"),
-    reporter: "Lab technician",
-  },
-  {
-    id: "fi3",
-    title: "Navy hoodie, size M",
-    description: "University-branded hoodie left on a chair after the evening seminar.",
-    location: "Humanities Building, room 07",
-    date: "08 Mar 2025",
-    status: "Claimed",
-    category: "Clothing",
-    image: img("uit-hoodie"),
-    reporter: "Security office",
-  },
-  {
-    id: "fi4",
-    title: "Spiral notebook — Linear Algebra",
-    description: "A4 notebook full of handwritten matrix notes, name partially rubbed out.",
-    location: "Café Terrace",
-    date: "06 Mar 2025",
-    status: "Found",
-    category: "Academic",
-    image: img("uit-notebook"),
-    reporter: "Café staff",
-  },
-];
-
-export interface MatchSuggestion {
-  id: string;
-  lostTitle: string;
-  foundTitle: string;
-  confidence: number;
-  reason: string;
-}
-
-export const matchSuggestions: MatchSuggestion[] = [
-  {
-    id: "ms1",
-    lostTitle: "Black laptop sleeve (15\")",
-    foundTitle: "Padded sleeve handed in at Library desk",
-    confidence: 92,
-    reason: "Same building, matching size and colour, reported within 4 hours.",
-  },
-  {
-    id: "ms2",
-    lostTitle: "Scientific calculator",
-    foundTitle: "Casio calculator found in Engineering Block",
-    confidence: 78,
-    reason: "Identical model and location; initials not yet verified.",
-  },
-];
-
-export const lostFoundCategories = ["All", "Electronics", "Documents", "Academic", "Personal", "Clothing"];
-
 export interface Announcement {
   id: string;
   category: "Academic" | "Events" | "Campus" | "Exams" | "Clubs";
@@ -158,8 +23,7 @@ export const announcements: Announcement[] = [
     id: "an2",
     category: "Academic",
     title: "Semester IV coursework deadline extended",
-    description:
-      "The CST-4105 Enterprise Java milestone deadline moves to Friday 14 March, 17:00.",
+    description: "The CST-4105 Enterprise Java milestone deadline moves to Friday 14 March, 17:00.",
     date: "10 Mar 2025",
     pinned: true,
     author: "Dr. H. Lindqvist",
@@ -209,18 +73,63 @@ export const announcements: Announcement[] = [
 export const announcementCategories = ["All", "Academic", "Exams", "Events", "Campus", "Clubs"];
 
 export const achievements = [
-  { id: "ac1", title: "18-day streak", description: "Studied every day for 18 days", icon: "flame" },
-  { id: "ac2", title: "Quiz master", description: "Scored above 85% on five quizzes", icon: "trophy" },
-  { id: "ac3", title: "Deep focus", description: "Logged a 4-hour uninterrupted session", icon: "target" },
-  { id: "ac4", title: "Note architect", description: "Generated 50 smart note cards", icon: "notebook" },
-  { id: "ac5", title: "Early bird", description: "Ten sessions started before 08:00", icon: "sunrise" },
-  { id: "ac6", title: "Helper", description: "Returned 3 lost items to their owners", icon: "heart" },
+  {
+    id: "ac1",
+    title: "18-day streak",
+    description: "Studied every day for 18 days",
+    icon: "flame",
+  },
+  {
+    id: "ac2",
+    title: "Quiz master",
+    description: "Scored above 85% on five quizzes",
+    icon: "trophy",
+  },
+  {
+    id: "ac3",
+    title: "Deep focus",
+    description: "Logged a 4-hour uninterrupted session",
+    icon: "target",
+  },
+  {
+    id: "ac4",
+    title: "Note architect",
+    description: "Generated 50 smart note cards",
+    icon: "notebook",
+  },
+  {
+    id: "ac5",
+    title: "Early bird",
+    description: "Ten sessions started before 08:00",
+    icon: "sunrise",
+  },
+  {
+    id: "ac6",
+    title: "Helper",
+    description: "Returned 3 lost items to their owners",
+    icon: "heart",
+  },
 ];
 
 export const profileActivity = [
-  { id: "pa1", label: "Completed mock exam — Enterprise Java", when: "Today, 09:40", detail: "84%" },
+  {
+    id: "pa1",
+    label: "Completed mock exam — Enterprise Java",
+    when: "Today, 09:40",
+    detail: "84%",
+  },
   { id: "pa2", label: "Reviewed 32 flashcards", when: "Today, 08:05", detail: "Linear Algebra" },
-  { id: "pa3", label: "Uploaded AI search methods slides", when: "Yesterday, 19:22", detail: "58 pages" },
+  {
+    id: "pa3",
+    label: "Uploaded AI search methods slides",
+    when: "Yesterday, 19:22",
+    detail: "58 pages",
+  },
   { id: "pa4", label: "Reported a found item", when: "Yesterday, 13:10", detail: "Lost & Found" },
-  { id: "pa5", label: "Finished study goal — matrix decompositions", when: "2 days ago", detail: "7 / 8 h" },
+  {
+    id: "pa5",
+    label: "Finished study goal — matrix decompositions",
+    when: "2 days ago",
+    detail: "7 / 8 h",
+  },
 ];

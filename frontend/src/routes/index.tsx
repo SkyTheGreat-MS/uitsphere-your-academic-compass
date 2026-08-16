@@ -23,10 +23,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
-import { announcements, lostItems } from "@/data/campus";
+import { announcements } from "@/data/campus";
 import { useAuth } from "@/context/AuthContext";
 import { getTimetable, type TimetableEntry } from "@/api/timetableApi";
 import { getDashboard } from "@/api/dashboardApi";
+import { browseLostFound } from "@/api/lostFoundApi";
 import { formatMinutesUntil, getTimetableState, timeToMinutes } from "@/lib/timetable";
 import { activityTool, formatWhen } from "@/lib/activity";
 
@@ -104,6 +105,11 @@ function DashboardPage() {
     queryKey: ["dashboard"],
     queryFn: () => getDashboard(),
     staleTime: 60_000,
+  });
+  const { data: recentLost = [] } = useQuery({
+    queryKey: ["lost-found", "browse", "LOST", "All", ""],
+    queryFn: () => browseLostFound({ type: "LOST" }),
+    staleTime: 30_000,
   });
   useEffect(() => {
     getTimetable()
@@ -571,28 +577,34 @@ function DashboardPage() {
             }
           >
             <ul className="space-y-3">
-              {lostItems.slice(0, 3).map((i) => (
-                <li
-                  key={i.id}
-                  className="hover-lift flex items-center gap-3 rounded-xl border border-border p-2.5"
-                >
-                  <img
-                    src={i.image}
-                    alt={i.title}
-                    loading="lazy"
-                    className="size-12 shrink-0 rounded-lg object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{i.title}</p>
-                    <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                      <MapPin className="size-3 shrink-0" /> {i.location}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0 rounded-full text-[11px]">
-                    {i.status}
-                  </Badge>
+              {recentLost.length ? (
+                recentLost.slice(0, 3).map((i) => (
+                  <li
+                    key={i.id}
+                    className="hover-lift flex items-center gap-3 rounded-xl border border-border p-2.5"
+                  >
+                    <img
+                      src={i.imageUrl ? `http://localhost:8080${i.imageUrl}` : undefined}
+                      alt={i.title}
+                      loading="lazy"
+                      className="size-12 shrink-0 rounded-lg object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{i.title}</p>
+                      <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                        <MapPin className="size-3 shrink-0" /> {i.location}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="shrink-0 rounded-full text-[11px]">
+                      {i.status.charAt(0) + i.status.slice(1).toLowerCase()}
+                    </Badge>
+                  </li>
+                ))
+              ) : (
+                <li className="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-xs text-muted-foreground">
+                  No lost items reported yet.
                 </li>
-              ))}
+              )}
             </ul>
           </SectionCard>
 
