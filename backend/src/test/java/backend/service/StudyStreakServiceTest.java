@@ -29,7 +29,8 @@ class StudyStreakServiceTest {
     void recordsOnlyOneStudyDayForMultipleActivities() {
         Student student = new Student();
         when(activityRepository.findByStudentAndActivityDate(eq(student), any(LocalDate.class)))
-                .thenReturn(Optional.empty(), Optional.of(new StudyActivity()));
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(new StudyActivity()));
         StudyStreakService service = new StudyStreakService(activityRepository);
 
         service.record(student, StudyActivityType.TASK_COMPLETED);

@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
         Map<String, String> error = Map.of(
                 "message", "File too large. Maximum upload size is 50MB.");
 
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(error);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

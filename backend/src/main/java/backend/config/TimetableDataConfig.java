@@ -36,7 +36,7 @@ public class TimetableDataConfig {
             };
             Map<String, Subject> subjectMap = java.util.Arrays.stream(subjectData)
                     .map(row -> subjects.findByCode(row[0]).orElseGet(() -> subjects.save(new Subject(row[0], row[1], row[2]))))
-                    .collect(Collectors.toMap(Subject::getCode, Function.identity()));
+                    .collect(Collectors.toMap(s -> s.getCode(), Function.identity()));
 
             // The four-code elective slot is represented only by CST-4105, per the current section choice.
             String[][] timetable = {

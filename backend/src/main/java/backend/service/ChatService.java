@@ -108,7 +108,7 @@ public class ChatService {
                 ? session.getLearningMaterial() == null ? null
                 : materialContextService.getMaterialContext(session.getLearningMaterial().getId())
                 : materialContextService.getMaterialContext(
-                        session.getLearningMaterials().stream().map(LearningMaterial::getId).toList());
+                        session.getLearningMaterials().stream().map(material -> material.getId()).toList());
         String conversationContext = conversationContext(session);
         String context = combineContext(lectureContext, conversationContext);
         String answer = groqService.ask(question, context);

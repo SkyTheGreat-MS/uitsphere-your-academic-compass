@@ -1,8 +1,6 @@
 package backend.dto;
 
 import backend.entity.StudyTask;
-import backend.entity.StudyTaskPriority;
-import backend.entity.StudyTaskStatus;
 
 public record StudyTaskResponse(
         Long id,

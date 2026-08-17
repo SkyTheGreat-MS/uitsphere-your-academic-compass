@@ -174,7 +174,7 @@ public class DashboardService {
             }
         }
 
-        activity.sort(Comparator.comparing(DashboardResponse.RecentActivity::at, (a, b) -> {
+        activity.sort(Comparator.comparing(act -> act.at(), (a, b) -> {
             LocalDateTime first = LocalDateTime.parse(a);
             LocalDateTime second = LocalDateTime.parse(b);
             return second.compareTo(first);

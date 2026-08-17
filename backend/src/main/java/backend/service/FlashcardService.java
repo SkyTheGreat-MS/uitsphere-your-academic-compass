@@ -106,14 +106,14 @@ public class FlashcardService {
         List<Flashcard> cards = flashcardRepository.findByDeckIdOrderByOrderIndexAsc(deckId);
         Set<Long> learnedIds = progressRepository.findAllByStudentAndFlashcardIn(student, cards)
                 .stream()
-                .filter(FlashcardProgress::isLearned)
+                .filter(p -> p.isLearned())
                 .map(progress -> progress.getFlashcard().getId())
                 .collect(Collectors.toSet());
 
         List<FlashcardResponse> cardResponses = cards.stream()
                 .map(card -> FlashcardResponse.from(card, learnedIds.contains(card.getId())))
                 .toList();
-        long learnedCount = cardResponses.stream().filter(FlashcardResponse::learned).count();
+        long learnedCount = cardResponses.stream().filter(c -> c.learned()).count();
 
         return FlashcardDeckDetailResponse.from(deck, cardResponses, learnedCount);
     }

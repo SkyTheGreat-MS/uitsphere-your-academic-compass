@@ -13,14 +13,9 @@ import backend.entity.FlashcardDeck;
 import backend.entity.FlashcardProgress;
 import backend.entity.LearningMaterial;
 import backend.entity.LearningMaterialStatus;
-import backend.entity.Quiz;
 import backend.entity.QuizAttempt;
-import backend.entity.SmartNote;
 import backend.entity.Student;
-import backend.entity.StudyTask;
 import backend.entity.StudyTaskPriority;
-import backend.entity.Subject;
-import backend.entity.Summary;
 import backend.entity.TimetableEntry;
 import backend.repository.FlashcardDeckRepository;
 import backend.repository.FlashcardProgressRepository;
@@ -31,14 +26,12 @@ import backend.repository.QuizRepository;
 import backend.repository.SmartNoteRepository;
 import backend.repository.StudentRepository;
 import backend.repository.StudyTaskRepository;
-import backend.repository.SubjectRepository;
 import backend.repository.SummaryRepository;
 import backend.repository.TimetableEntryRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -67,7 +60,6 @@ public class PlannerService {
     private final SummaryRepository summaryRepository;
     private final SmartNoteRepository smartNoteRepository;
     private final StudyTaskRepository studyTaskRepository;
-    private final SubjectRepository subjectRepository;
 
     public PlannerService(
             StudentRepository studentRepository,
@@ -80,8 +72,7 @@ public class PlannerService {
             FlashcardProgressRepository flashcardProgressRepository,
             SummaryRepository summaryRepository,
             SmartNoteRepository smartNoteRepository,
-            StudyTaskRepository studyTaskRepository,
-            SubjectRepository subjectRepository) {
+            StudyTaskRepository studyTaskRepository) {
         this.studentRepository = studentRepository;
         this.timetableEntryRepository = timetableEntryRepository;
         this.learningMaterialRepository = learningMaterialRepository;
@@ -93,7 +84,6 @@ public class PlannerService {
         this.summaryRepository = summaryRepository;
         this.smartNoteRepository = smartNoteRepository;
         this.studyTaskRepository = studyTaskRepository;
-        this.subjectRepository = subjectRepository;
     }
 
     @Transactional(readOnly = true)
@@ -122,7 +112,7 @@ public class PlannerService {
         if (section == null || section.isBlank()) section = "Second Year A";
         return timetableEntryRepository.findBySectionAndAcademicYearAndSemester(section, ACADEMIC_YEAR, SEMESTER).stream()
                 .sorted(Comparator.comparingInt((TimetableEntry e) -> DAYS.indexOf(e.getDayOfWeek()))
-                        .thenComparing(TimetableEntry::getStartTime))
+                        .thenComparing(e -> e.getStartTime()))
                 .map(e -> new PlannerClassResponse(
                         e.getDayOfWeek(),
                         e.getSubject().getCode(),
@@ -139,7 +129,7 @@ public class PlannerService {
         List<LearningMaterial> materials = learningMaterialRepository.findByStudentOrderByCreatedAtDesc(student);
         Set<Long> readyIds = materials.stream()
                 .filter(m -> m.getStatus() == LearningMaterialStatus.READY)
-                .map(LearningMaterial::getId)
+                .map(m -> m.getId())
                 .collect(Collectors.toSet());
 
         Set<Long> summaryIds = summaryRepository.findByStudentOrderByUpdatedAtDesc(student).stream()
@@ -184,35 +174,29 @@ public class PlannerService {
 
     private List<PlannerFlashcardResponse> loadFlashcards(Student student) {
         List<FlashcardDeck> decks = flashcardDeckRepository.findByStudentOrderByUpdatedAtDesc(student);
-        List<Long> deckIds = decks.stream().map(FlashcardDeck::getId).toList();
 
         Map<Long, Long> totalByDeck = new HashMap<>();
         Map<Long, Set<Long>> deckFlashcardIds = new HashMap<>();
         List<Flashcard> allCards = new ArrayList<>();
-        Map<Long, FlashcardDeck> deckOfCard = new HashMap<>();
         for (FlashcardDeck deck : decks) {
             List<Flashcard> cards = flashcardRepository.findByDeckIdOrderByOrderIndexAsc(deck.getId());
             totalByDeck.put(deck.getId(), (long) cards.size());
-            deckFlashcardIds.put(deck.getId(), cards.stream().map(Flashcard::getId).collect(Collectors.toSet()));
+            deckFlashcardIds.put(deck.getId(), cards.stream().map(c -> c.getId()).collect(Collectors.toSet()));
             allCards.addAll(cards);
-            for (Flashcard card : cards) deckOfCard.put(card.getId(), deck);
         }
 
-        Map<Flashcard, FlashcardProgress> progressByCard = allCards.isEmpty()
+        Map<Long, FlashcardProgress> progressByCardId = allCards.isEmpty()
                 ? Map.of()
                 : flashcardProgressRepository.findAllByStudentAndFlashcardIn(student, allCards).stream()
-                        .collect(Collectors.toMap(FlashcardProgress::getFlashcard, p -> p, (a, b) -> a));
+                        .collect(Collectors.toMap(p -> p.getFlashcard().getId(), p -> p, (a, b) -> a));
 
         return decks.stream()
                 .map(deck -> {
                     Set<Long> cardIds = deckFlashcardIds.getOrDefault(deck.getId(), Set.of());
                     long learned = cardIds.stream()
-                            .map(id -> deckOfCard.get(id))
+                            .map(id -> progressByCardId.get(id))
                             .filter(java.util.Objects::nonNull)
-                            .filter(card -> {
-                                FlashcardProgress p = progressByCard.get(card);
-                                return p != null && p.isLearned();
-                            })
+                            .filter(p -> p.isLearned())
                             .count();
                     return new PlannerFlashcardResponse(
                             deck.getId(),
@@ -245,7 +229,7 @@ public class PlannerService {
         int rank = 0;
 
         Comparator<PlannerMaterialResponse> byNewest = Comparator
-                .comparing(PlannerMaterialResponse::uploadedAt)
+                .comparing((PlannerMaterialResponse m) -> m.uploadedAt())
                 .reversed();
 
         List<PlannerMaterialResponse> reviewed = materials.stream()
@@ -267,39 +251,39 @@ public class PlannerService {
         for (PlannerQuizResponse q : quizzes) {
             if (!q.completed()) {
                 recommendations.add(new RecommendationResponse(
-                        "quiz-" + q.id(),
-                        "Complete " + q.title(),
-                        "Quiz not attempted yet",
-                        "quiz",
-                        ++rank,
-                        q.id(),
-                        null, null));
+                    "quiz-" + q.id(),
+                    "Complete " + q.title(),
+                    "Quiz not attempted yet",
+                    "quiz",
+                    ++rank,
+                    q.id(),
+                    null, null));
             }
         }
 
         for (PlannerFlashcardResponse f : flashcards) {
             if (f.learned() < f.total()) {
                 recommendations.add(new RecommendationResponse(
-                        "flashcards-" + f.deckId(),
-                        "Review " + (f.total() - f.learned()) + " flashcards",
-                        f.title(),
-                        "flashcards",
-                        ++rank,
-                        f.deckId(),
-                        null, null));
+                    "flashcards-" + f.deckId(),
+                    "Review " + (f.total() - f.learned()) + " flashcards",
+                    f.title(),
+                    "flashcards",
+                    ++rank,
+                    f.deckId(),
+                    null, null));
             }
         }
 
         for (PlannerMaterialResponse m : materials) {
             if ("READY".equals(m.status()) && !m.hasSummary() && !m.hasNotes() && !m.hasFlashcards() && !m.hasQuiz()) {
                 recommendations.add(new RecommendationResponse(
-                        "process-" + m.id(),
-                        "Process " + m.title(),
-                        "Generate a summary, notes, flashcards or quiz for this lecture",
-                        "material",
-                        ++rank,
-                        m.id(),
-                        null, null));
+                    "process-" + m.id(),
+                    "Process " + m.title(),
+                    "Generate a summary, notes, flashcards or quiz for this lecture",
+                    "material",
+                    ++rank,
+                    m.id(),
+                    null, null));
             }
         }
 
@@ -308,17 +292,9 @@ public class PlannerService {
             recommendations.add(RecommendationResponse.studentTask(task, StudyTaskPriority.valueOf(task.priority().toUpperCase())));
         }
 
-        recommendations.sort(Comparator.comparingInt(RecommendationResponse::priority));
+        recommendations.sort(Comparator.comparingInt(r -> r.priority()));
 
         return recommendations.stream().limit(8).toList();
-    }
-
-    private static String priorityOrder(String priority) {
-        return switch (priority) {
-            case "high" -> "0";
-            case "medium" -> "1";
-            default -> "2";
-        };
     }
 
     private Student currentStudent() {

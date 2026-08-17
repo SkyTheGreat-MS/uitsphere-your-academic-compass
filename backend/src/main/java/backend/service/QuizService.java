@@ -187,7 +187,7 @@ public class QuizService {
             answersByQuestion.put(answer.getQuestionId(), answer);
         }
 
-        int correctCount = (int) answers.stream().filter(QuizAnswer::isCorrect).count();
+        int correctCount = (int) answers.stream().filter(answer -> answer.isCorrect()).count();
         int totalQuestions = questions.size();
         int incorrectCount = Math.max(0, totalQuestions - correctCount);
 

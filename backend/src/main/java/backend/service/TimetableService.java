@@ -42,7 +42,7 @@ public class TimetableService {
         String section = currentStudentSection();
         return timetableEntryRepository.findBySectionAndAcademicYearAndSemester(section, ACADEMIC_YEAR, SEMESTER).stream()
                 .sorted(Comparator.comparingInt((TimetableEntry e) -> DAYS.stream().toList().indexOf(e.getDayOfWeek()))
-                        .thenComparing(TimetableEntry::getStartTime))
+                        .thenComparing(e -> e.getStartTime()))
                 .map(e -> new TimetableResponse(e.getDayOfWeek(), e.getSubject().getCode(), e.getSubject().getName(),
                         e.getSubject().getLecturer(), e.getStartTime().format(TIME_FORMAT), e.getEndTime().format(TIME_FORMAT),
                         e.getRoom(), e.getClassType()))

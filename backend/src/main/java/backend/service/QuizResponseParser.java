@@ -46,8 +46,11 @@ public class QuizResponseParser {
 
         List<ParsedQuestion> questions = new ArrayList<>();
         for (JsonNode node : root) {
+            if (node == null) {
+                continue;
+            }
             String question = textField(node, "question");
-            JsonNode optionsNode = node == null ? null : node.get("options");
+            JsonNode optionsNode = node.get("options");
             List<String> options = optionsNode != null && optionsNode.isArray()
                     ? toStrings(optionsNode)
                     : List.of();
