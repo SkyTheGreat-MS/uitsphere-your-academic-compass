@@ -60,7 +60,7 @@ export function Topbar() {
     }
     navigate({
       to: notification.link as
-        "/" | "/studio" | "/planner" | "/timetable" | "/lost-found" | "/announcements" | "/profile",
+        "/" | "/studio" | "/planner" | "/timetable" | "/lost-found" | "/profile",
     });
   };
 

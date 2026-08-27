@@ -88,8 +88,6 @@ Persistent left sidebar containing:
 
 • Lost & Found
 
-• Announcements
-
 • Profile
 
 Top navigation should include:
@@ -151,8 +149,6 @@ Study progress
 Weekly productivity chart
 
 Quick action cards
-
-Recent announcements
 
 Lost & Found preview
 
@@ -382,28 +378,6 @@ Use placeholder images.
 
 ----------------------------------------------------
 
-Announcements
-
-----------------------------------------------------
-
-Modern news feed.
-
-Cards contain:
-
-Category
-
-Title
-
-Description
-
-Date
-
-Pinned badge
-
-Filter chips
-
-----------------------------------------------------
-
 Profile
 
 ----------------------------------------------------
@@ -454,7 +428,7 @@ Mock Data
 
 Populate every page with realistic university data.
 
-Include fake subjects, deadlines, AI conversations, announcements, lost items, quizzes, and study statistics.
+Include fake subjects, deadlines, AI conversations, lost items, quizzes, and study statistics.
 
 Nothing should appear empty.
 

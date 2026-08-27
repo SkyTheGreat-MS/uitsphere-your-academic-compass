@@ -11,7 +11,6 @@ import {
   ListChecks,
   PackageSearch,
   MapPin,
-  Pin,
   FileText,
   Award,
   BookOpen,
@@ -23,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
-import { announcements } from "@/data/campus";
 import { useAuth } from "@/context/AuthContext";
 import { getTimetable, type TimetableEntry } from "@/api/timetableApi";
 import { getDashboard } from "@/api/dashboardApi";
@@ -535,36 +533,7 @@ function DashboardPage() {
           </SectionCard>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-3">
-          <SectionCard
-            title="Recent announcements"
-            action={
-              <Button asChild variant="ghost" size="sm" className="rounded-lg">
-                <Link to="/announcements">
-                  All <ArrowUpRight className="size-3.5" />
-                </Link>
-              </Button>
-            }
-          >
-            <ul className="space-y-3">
-              {announcements.slice(0, 3).map((a) => (
-                <li key={a.id} className="rounded-xl border border-border p-3">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="rounded-full text-[11px]">
-                      {a.category}
-                    </Badge>
-                    {a.pinned && <Pin className="size-3 text-primary" />}
-                    <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
-                      {a.date}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold">{a.title}</p>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{a.description}</p>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-
+        <div className="grid gap-4 lg:grid-cols-2">
           <SectionCard
             title="Lost & Found"
             description="Recently reported near you"

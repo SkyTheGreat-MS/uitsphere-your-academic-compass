@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ListChecks,
   PackageSearch,
-  Megaphone,
   UserRound,
   GraduationCap,
   PanelLeftClose,
@@ -23,7 +22,6 @@ export const navItems = [
   { label: "Timetable", to: "/timetable", icon: CalendarDays },
   { label: "Study Planner", to: "/planner", icon: ListChecks },
   { label: "Lost & Found", to: "/lost-found", icon: PackageSearch },
-  { label: "Announcements", to: "/announcements", icon: Megaphone },
   { label: "Profile", to: "/profile", icon: UserRound },
 ] as const;
 
