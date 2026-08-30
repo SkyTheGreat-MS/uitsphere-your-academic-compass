@@ -27,11 +27,13 @@ public class GroqService {
             RestClient groqRestClient,
             ObjectMapper objectMapper,
             @Value("${groq.api.key:}") String apiKey,
-            @Value("${groq.api.model:llama-3.3-70b-versatile}") String model) {
+            @Value("${groq.api.model:openai/gpt-oss-120b}") String model) {
         this.restClient = groqRestClient;
         this.objectMapper = objectMapper;
         this.apiKey = apiKey;
         this.model = model;
+        System.out.println("Groq API key configured: " + (apiKey != null && !apiKey.isBlank()));
+        System.out.println("Groq model configured: " + model);
     }
 
     public String ask(String question, String context) {

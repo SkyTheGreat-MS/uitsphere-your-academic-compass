@@ -10,6 +10,7 @@ public class GroqConfig {
 
     @Bean
     public RestClient groqRestClient(@Value("${groq.api.url}") String apiUrl) {
+        System.out.println("Groq URL configured: " + apiUrl);
         return RestClient.builder()
                 .baseUrl(apiUrl)
                 .build();
