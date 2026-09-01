@@ -140,13 +140,13 @@ public class LostFoundService {
                             "item-returned",
                             "Item returned",
                             "\"" + post.getTitle() + "\" has been marked as returned.",
-                            "/lost-found");
+                            "/lost-found?tab=activity");
                     notificationService.notify(
                             student,
                             "item-returned",
                             "Item returned",
                             "\"" + post.getTitle() + "\" was marked as returned.",
-                            "/lost-found");
+                            "/lost-found?tab=activity");
                 });
         return response;
     }
@@ -169,6 +169,15 @@ public class LostFoundService {
                 .stream()
                 .map(ClaimResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ClaimResponse getClaim(Long claimId) {
+        Student student = currentStudent();
+        LostFoundClaim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new IllegalArgumentException("Claim not found"));
+        requireParticipant(claim, student);
+        return ClaimResponse.from(claim);
     }
 
     @Transactional
@@ -195,7 +204,7 @@ public class LostFoundService {
                 "claim",
                 "New claim on your item",
                 student.getName() + " claims \"" + post.getTitle() + "\".",
-                "/lost-found");
+                "/lost-found?tab=activity&postId=" + post.getId());
         return ClaimResponse.from(saved);
     }
 
@@ -221,7 +230,7 @@ public class LostFoundService {
                 "claim-accepted",
                 "Claim accepted",
                 "Your claim on \"" + post.getTitle() + "\" was accepted.",
-                "/lost-found");
+                "/lost-found?tab=activity&claimId=" + claim.getId());
         return ClaimResponse.from(saved);
     }
 
@@ -245,7 +254,7 @@ public class LostFoundService {
                 "claim-rejected",
                 "Claim rejected",
                 "Your claim on \"" + post.getTitle() + "\" was not accepted.",
-                "/lost-found");
+                "/lost-found?tab=activity");
         return ClaimResponse.from(saved);
     }
 
@@ -290,7 +299,7 @@ public class LostFoundService {
                 "message",
                 "New message",
                 student.getName() + " messaged you about \"" + claim.getPost().getTitle() + "\".",
-                "/lost-found");
+                "/lost-found?tab=activity&claimId=" + claim.getId());
         return MessageResponse.from(saved);
     }
 

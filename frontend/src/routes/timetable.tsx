@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getTimetable, importTimetable, type TimetableEntry } from "@/api/timetableApi";
+import { formatTime12, formatTimeRange12 } from "@/lib/date";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/timetable")({ component: TimetablePage });
@@ -181,10 +182,10 @@ function TimetablePage() {
               {hours.map((hour) => (
                 <div
                   key={hour}
-                  className="absolute -translate-y-1/2 text-[11px] text-muted-foreground"
+                  className="absolute -translate-y-1/2 text-[11px] text-muted-foreground whitespace-nowrap"
                   style={{ top: (toMinutes(hour) - DAY_START) * PX_PER_MIN }}
                 >
-                  {hour}
+                  {formatTime12(hour)}
                 </div>
               ))}
             </div>
@@ -224,7 +225,7 @@ function TimetablePage() {
                           </p>
                           <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                             <Clock3 className="size-3 shrink-0" />
-                            {entry.startTime}–{entry.endTime}
+                            {formatTimeRange12(entry.startTime, entry.endTime)}
                           </p>
                           <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                             <MapPin className="size-3 shrink-0" />

@@ -27,6 +27,7 @@ import { getTimetable, type TimetableEntry } from "@/api/timetableApi";
 import { getDashboard } from "@/api/dashboardApi";
 import { browseLostFound } from "@/api/lostFoundApi";
 import { formatMinutesUntil, getTimetableState, timeToMinutes } from "@/lib/timetable";
+import { formatTime12 } from "@/lib/date";
 import { activityTool, formatWhen } from "@/lib/activity";
 
 export const Route = createFileRoute("/")({
@@ -308,7 +309,7 @@ function DashboardPage() {
             {schedule.current && (
               <div className="mb-3 rounded-xl border border-primary/30 bg-primary-soft p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                  In progress · ends {schedule.current.endTime}
+                  In progress · ends {formatTime12(schedule.current.endTime)}
                 </p>
                 <p className="mt-1 text-sm font-semibold">
                   {schedule.current.subjectCode} · {schedule.current.subjectName}
@@ -322,7 +323,7 @@ function DashboardPage() {
               <div className="mb-3 rounded-xl border border-dashed border-border bg-muted/40 p-3">
                 <p className="text-sm font-semibold">{schedule.breakLabel}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Next class starts at {schedule.nextToday?.startTime} ·{" "}
+                  Next class starts at {formatTime12(schedule.nextToday?.startTime)} ·{" "}
                   {formatMinutesUntil(
                     timeToMinutes(schedule.nextToday!.startTime) -
                       (now.getHours() * 60 + now.getMinutes()),
@@ -340,7 +341,7 @@ function DashboardPage() {
                   {schedule.nextUpcoming.subjectCode} · {schedule.nextUpcoming.subjectName}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Starts at {schedule.nextUpcoming.startTime} · Room {schedule.nextUpcoming.room}
+                  Starts at {formatTime12(schedule.nextUpcoming.startTime)} · Room {schedule.nextUpcoming.room}
                   {schedule.nextUpcomingDay === currentDay
                     ? ` · ${formatMinutesUntil(timeToMinutes(schedule.nextUpcoming.startTime) - (now.getHours() * 60 + now.getMinutes()))}`
                     : ""}
@@ -370,8 +371,8 @@ function DashboardPage() {
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-semibold">{c.startTime}</p>
-                      <p className="text-[11px] text-muted-foreground">{c.endTime}</p>
+                      <p className="text-sm font-semibold">{formatTime12(c.startTime)}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatTime12(c.endTime)}</p>
                     </div>
                   </li>
                 );

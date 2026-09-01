@@ -19,6 +19,13 @@ import backend.repository.QuizRepository;
 import backend.repository.SmartNoteRepository;
 import backend.repository.StudentRepository;
 import backend.repository.SummaryRepository;
+import backend.dto.ClaimResponse;
+import backend.entity.ClaimStatus;
+import backend.entity.LostFoundClaim;
+import backend.entity.LostFoundPost;
+import backend.repository.ClaimMessageRepository;
+import backend.repository.LostFoundClaimRepository;
+import backend.repository.LostFoundPostRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,6 +71,9 @@ class DataIsolationSecurityTest {
     @Mock private FlashcardResponseParser flashcardResponseParser;
     @Mock private QuizResponseParser quizResponseParser;
     @Mock private JdbcTemplate jdbcTemplate;
+    @Mock private LostFoundPostRepository postRepository;
+    @Mock private LostFoundClaimRepository claimRepository;
+    @Mock private ClaimMessageRepository messageRepository;
 
     private Student studentA;
     private Student studentB;
@@ -267,5 +277,35 @@ class DataIsolationSecurityTest {
         assertThatThrownBy(() -> service.getMaterialContext(List.of(700L)))
                 .isInstanceOf(LearningMaterialException.class)
                 .hasMessageContaining("One or more learning materials were not found");
+    }
+
+    @Test
+    void thirdPartyStudentCannotAccessClaimBetweenReporterAndClaimant() {
+        Student studentC = new Student();
+        ReflectionTestUtils.setField(studentC, "id", 3L);
+        studentC.setEmail("studentC@university.edu");
+
+        authenticateAs(studentC);
+
+        LostFoundPost post = new LostFoundPost();
+        ReflectionTestUtils.setField(post, "id", 800L);
+        post.setReporter(studentA);
+        post.setTitle("Lost Laptop");
+
+        LostFoundClaim claim = new LostFoundClaim();
+        ReflectionTestUtils.setField(claim, "id", 888L);
+        claim.setPost(post);
+        claim.setClaimant(studentB);
+        claim.setStatus(ClaimStatus.ACCEPTED);
+
+        when(claimRepository.findById(888L)).thenReturn(Optional.of(claim));
+
+        LostFoundService service = new LostFoundService(
+                postRepository, claimRepository, messageRepository,
+                studentRepository, notificationService, "uploads");
+
+        assertThatThrownBy(() -> service.getClaim(888L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("You are not part of this conversation.");
     }
 }

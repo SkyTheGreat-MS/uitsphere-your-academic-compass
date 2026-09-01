@@ -24,6 +24,7 @@ import {
   MessageSquarePlus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { formatTime12 } from "@/lib/date";
 import {
   createChatSession,
   deleteChatSession,
@@ -118,7 +119,7 @@ function formatMaterialStatus(status: LearningMaterial["status"]) {
 function formatChatTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return formatTime12(date);
 }
 
 function formatTimestamp(value: string) {

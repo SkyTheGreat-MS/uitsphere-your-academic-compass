@@ -19,6 +19,8 @@ import {
   NotebookPen,
   Layers,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { SectionCard, EmptyState, PriorityBadge } from "@/components/common/Primitives";
@@ -225,11 +227,6 @@ function PlannerPage() {
     return getUpcomingEvents(planner.classes, planner.tasks, now);
   }, [planner, now]);
 
-  // Grouped by day (Today, Tomorrow, etc.)
-  const groupedUpcoming = useMemo(() => {
-    return groupUpcomingEvents(upcomingEvents, now);
-  }, [upcomingEvents, now]);
-
   // Non-scheduled study activities for side panel
   const studyActivities = useMemo(() => {
     if (!planner) {
@@ -337,7 +334,7 @@ function PlannerPage() {
                 }
               >
                 <UpcomingTimeline
-                  groupedEvents={groupedUpcoming}
+                  events={upcomingEvents}
                   now={now}
                   onAddTask={openCreate}
                   onToggleTask={toggle}
@@ -545,7 +542,7 @@ function PlannerStat({
  * Unified upcoming chronological timeline component.
  */
 function UpcomingTimeline({
-  groupedEvents,
+  events,
   now,
   onAddTask,
   onToggleTask,
@@ -553,7 +550,7 @@ function UpcomingTimeline({
   onDeleteTask,
   deletingId,
 }: {
-  groupedEvents: GroupedPlannerEvents[];
+  events: UnifiedPlannerEvent[];
   now: Date;
   onAddTask: () => void;
   onToggleTask: (task: StudyTask) => void;
@@ -561,9 +558,10 @@ function UpcomingTimeline({
   onDeleteTask: (id: number) => void;
   deletingId: number | null;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const nowMs = now.getTime();
 
-  if (!groupedEvents.length) {
+  if (!events.length) {
     return (
       <EmptyState
         icon={CalendarDays}
@@ -577,6 +575,10 @@ function UpcomingTimeline({
       />
     );
   }
+
+  const totalCount = events.length;
+  const visibleEvents = isExpanded ? events : events.slice(0, 5);
+  const groupedEvents = groupUpcomingEvents(visibleEvents, now);
 
   return (
     <div className="space-y-6">
@@ -710,6 +712,27 @@ function UpcomingTimeline({
           </ul>
         </div>
       ))}
+
+      {totalCount > 5 && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-border bg-card text-xs font-semibold shadow-xs hover:bg-muted"
+            onClick={() => setIsExpanded((prev) => !prev)}
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="size-3.5" /> Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="size-3.5" /> Show more ({totalCount - 5} more)
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

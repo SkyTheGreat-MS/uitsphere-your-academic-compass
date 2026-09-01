@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -57,6 +57,7 @@ import {
   browseLostFound,
   createLostFoundReport,
   deleteLostFoundReport,
+  getClaim,
   getClaimMessages,
   getClaimsForPost,
   getMyClaims,
@@ -70,9 +71,39 @@ import {
   type LostFoundClaim,
   type LostFoundPost,
 } from "@/api/lostFoundApi";
+import { formatDateTime12, formatTime12 } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
+export type LostFoundSearch = {
+  tab?: "lost" | "found" | "report" | "activity";
+  claimId?: number;
+  postId?: number;
+};
+
 export const Route = createFileRoute("/lost-found")({
+  validateSearch: (search: Record<string, unknown>): LostFoundSearch => {
+    return {
+      tab:
+        search.tab === "lost" ||
+        search.tab === "found" ||
+        search.tab === "report" ||
+        search.tab === "activity"
+          ? (search.tab as LostFoundSearch["tab"])
+          : undefined,
+      claimId:
+        typeof search.claimId === "number"
+          ? search.claimId
+          : typeof search.claimId === "string" && !Number.isNaN(Number(search.claimId))
+            ? Number(search.claimId)
+            : undefined,
+      postId:
+        typeof search.postId === "number"
+          ? search.postId
+          : typeof search.postId === "string" && !Number.isNaN(Number(search.postId))
+            ? Number(search.postId)
+            : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Campus Lost & Found — Ma-Haw-Tha-Dar" },
@@ -391,7 +422,7 @@ function ConversationDialog({ claim, onClose }: { claim: LostFoundClaim; onClose
                 <ReporterAvatar name={message.senderName} avatarUrl={message.senderAvatarUrl} />
                 <div className="min-w-0 rounded-xl bg-card px-3 py-2 shadow-soft">
                   <p className="text-[11px] font-semibold text-primary">
-                    {message.senderName} · {formatWhen(message.createdAt)}
+                    {message.senderName} · {formatDateTime12(message.createdAt)}
                   </p>
                   <p className="mt-0.5 whitespace-pre-wrap text-sm">{message.content}</p>
                 </div>
@@ -686,8 +717,9 @@ function ReportForm({
 }
 
 function LostFoundPage() {
+  const search = Route.useSearch();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("lost");
+  const [tab, setTab] = useState(() => search.tab || (search.claimId || search.postId ? "activity" : "lost"));
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -709,10 +741,22 @@ function LostFoundPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
+  const handledClaimRef = useRef<number | null>(null);
+  const handledPostRef = useRef<number | null>(null);
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Sync tab from search params when navigated
+  useEffect(() => {
+    if (search.tab) {
+      setTab(search.tab);
+    } else if (search.claimId || search.postId) {
+      setTab("activity");
+    }
+  }, [search.tab, search.claimId, search.postId]);
 
   const browseType = tab === "lost" ? "LOST" : tab === "found" ? "FOUND" : undefined;
   const { data: posts = [], isLoading } = useQuery({
@@ -735,6 +779,51 @@ function LostFoundPage() {
     queryKey: ["lost-found", "claims", "mine"],
     queryFn: getMyClaims,
   });
+
+  // Handle direct navigation to a specific claim / conversation
+  useEffect(() => {
+    if (!search.claimId || handledClaimRef.current === search.claimId) return;
+    handledClaimRef.current = search.claimId;
+    setTab("activity");
+
+    let isMounted = true;
+    void getClaim(search.claimId)
+      .then((claim) => {
+        if (isMounted) {
+          if (claim.status === "ACCEPTED") {
+            setConversationClaim(claim);
+          } else {
+            toast.info(`Claim on "${claim.postTitle}" is ${claim.status.toLowerCase()}`, {
+              description: "Conversations open once a claim is accepted.",
+            });
+          }
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          toast.error("Conversation not found", {
+            description: "The claim or report may have been deleted or resolved.",
+          });
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [search.claimId]);
+
+  // Handle direct navigation to claims for a specific report
+  useEffect(() => {
+    if (!search.postId || handledPostRef.current === search.postId) return;
+    if (!myReports.length) return;
+    handledPostRef.current = search.postId;
+    setTab("activity");
+
+    const target = myReports.find((r) => r.id === search.postId);
+    if (target) {
+      setClaimsPost(target);
+    }
+  }, [search.postId, myReports]);
 
   const refreshAll = () => {
     void queryClient.invalidateQueries({ queryKey: ["lost-found"] });

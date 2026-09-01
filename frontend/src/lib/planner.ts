@@ -1,4 +1,5 @@
 import type { PlannerClass, StudyTask, TaskPriority, TaskStatus } from "@/api/plannerApi";
+import { formatTime12 } from "./date";
 
 export const YANGON_TIMEZONE = "Asia/Yangon";
 
@@ -261,14 +262,16 @@ export function getUpcomingEvents(
         const targetMs = yangonDateTimeToMs(targetDate, c.startTime);
         // An event belongs in Upcoming only when its scheduled datetime is still in the future
         if (targetMs > nowMs) {
+          const displayStart = formatTime12(c.startTime);
+          const displayEnd = c.endTime ? formatTime12(c.endTime) : "";
           events.push({
             id: `class-${c.subjectCode}-${c.day}-${c.startTime}-${targetDate}`,
             title: `${c.subjectName} (${c.subjectCode})`,
-            subtitle: `Room ${c.room} · ${c.type}${c.endTime ? ` · ends ${c.endTime}` : ""}`,
+            subtitle: `Room ${c.room} · ${c.type}${displayEnd ? ` · ends ${displayEnd}` : ""}`,
             date: targetDate,
             time: c.startTime,
-            displayTime: c.startTime,
-            endTime: c.endTime,
+            displayTime: displayStart,
+            endTime: displayEnd,
             type: "class",
             targetDateTimeMs: targetMs,
             room: c.room,
@@ -300,7 +303,7 @@ export function getUpcomingEvents(
         subtitle: t.description || `Priority: ${t.priority}`,
         date: t.dueDate,
         time: t.dueTime ?? "Anytime",
-        displayTime: t.dueTime ?? "Anytime",
+        displayTime: t.dueTime ? formatTime12(t.dueTime) : "Anytime",
         type: "task",
         targetDateTimeMs: targetMs,
         priority: t.priority,

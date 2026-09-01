@@ -15,6 +15,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { navItems } from "./Sidebar";
 import { cn } from "@/lib/utils";
+import { formatDateTime12 } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 import {
   deleteNotification,
@@ -58,10 +59,24 @@ export function Topbar() {
     if (!notification.read) {
       void markNotificationRead(notification.id).then(refreshNotifications);
     }
-    navigate({
-      to: notification.link as
-        "/" | "/studio" | "/planner" | "/timetable" | "/lost-found" | "/profile",
-    });
+    const [rawPath, queryString] = (notification.link || "/").split("?");
+    const path = rawPath || "/";
+    if (queryString) {
+      const searchParams = new URLSearchParams(queryString);
+      const searchObj: Record<string, string | number> = {};
+      searchParams.forEach((val, key) => {
+        const num = Number(val);
+        searchObj[key] = !Number.isNaN(num) && String(num) === val ? num : val;
+      });
+      navigate({
+        to: path as "/" | "/studio" | "/planner" | "/timetable" | "/lost-found" | "/profile",
+        search: searchObj as any,
+      });
+    } else {
+      navigate({
+        to: path as "/" | "/studio" | "/planner" | "/timetable" | "/lost-found" | "/profile",
+      });
+    }
   };
 
   const handleMarkAllRead = () => {
@@ -156,25 +171,22 @@ export function Topbar() {
                         handleOpen(notification);
                       }}
                       className={cn(
-                        "flex-col items-start gap-1 rounded-lg p-3 pr-8",
-                        !notification.read && "bg-primary-soft",
+                        "relative flex-col items-start gap-1 rounded-lg p-3 pr-8 transition-colors",
+                        !notification.read && "bg-primary-soft/60",
                       )}
                     >
                       <div className="flex w-full items-center justify-between gap-2">
-                        <span className="truncate text-sm font-semibold">{notification.title}</span>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          {!notification.read && (
+                            <span className="size-2 shrink-0 rounded-full bg-destructive ring-2 ring-card" />
+                          )}
+                          <span className="truncate text-sm font-semibold">{notification.title}</span>
+                        </div>
                         <span className="shrink-0 text-[11px] text-muted-foreground">
-                          {new Date(notification.createdAt).toLocaleString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatDateTime12(notification.createdAt)}
                         </span>
                       </div>
                       <span className="text-xs text-muted-foreground">{notification.message}</span>
-                      {!notification.read && (
-                        <span className="absolute left-2 top-1/2 size-2 -translate-y-1/2 rounded-full bg-destructive" />
-                      )}
                       <span
                         role="button"
                         tabIndex={0}

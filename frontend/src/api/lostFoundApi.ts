@@ -118,6 +118,11 @@ export async function getMyClaims() {
   return response.data;
 }
 
+export async function getClaim(claimId: number) {
+  const response = await apiClient.get<LostFoundClaim>(`/api/lost-found/claims/${claimId}`);
+  return response.data;
+}
+
 export async function acceptClaim(claimId: number) {
   const response = await apiClient.put<LostFoundClaim>(`/api/lost-found/claims/${claimId}/accept`);
   return response.data;

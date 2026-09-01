@@ -99,6 +99,11 @@ public class LostFoundController {
         return lostFoundService.myClaims();
     }
 
+    @GetMapping("/claims/{claimId}")
+    public ClaimResponse getClaim(@PathVariable Long claimId) {
+        return lostFoundService.getClaim(claimId);
+    }
+
     @PutMapping("/claims/{claimId}/accept")
     public ClaimResponse acceptClaim(@PathVariable Long claimId) {
         return lostFoundService.acceptClaim(claimId);
