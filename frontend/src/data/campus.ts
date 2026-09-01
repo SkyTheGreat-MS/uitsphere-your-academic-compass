@@ -37,26 +37,3 @@ export const achievements = [
     icon: "heart",
   },
 ];
-
-export const profileActivity = [
-  {
-    id: "pa1",
-    label: "Completed mock exam — Enterprise Java",
-    when: "Today, 09:40",
-    detail: "84%",
-  },
-  { id: "pa2", label: "Reviewed 32 flashcards", when: "Today, 08:05", detail: "Linear Algebra" },
-  {
-    id: "pa3",
-    label: "Uploaded AI search methods slides",
-    when: "Yesterday, 19:22",
-    detail: "58 pages",
-  },
-  { id: "pa4", label: "Reported a found item", when: "Yesterday, 13:10", detail: "Lost & Found" },
-  {
-    id: "pa5",
-    label: "Finished study goal — matrix decompositions",
-    when: "2 days ago",
-    detail: "7 / 8 h",
-  },
-];

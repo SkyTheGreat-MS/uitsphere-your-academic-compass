@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getStudent } from "@/api/studentApi";
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     setStudent(null);
     setToken(null);
     if (typeof window !== "undefined") {
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem("token");
     }
     queryClient.clear();
-  };
+  }, [queryClient]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [clearSession]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("auth:unauthorized", handleUnauthorized);
     };
-  }, [queryClient]);
+  }, [clearSession]);
 
   const login = async (nextToken: string) => {
     setIsLoading(true);

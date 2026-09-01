@@ -49,7 +49,15 @@ export async function deleteFlashcardDeck(deckId: number) {
   await apiClient.delete(`/api/ai/flashcards/${deckId}`);
 }
 
+export type FlashcardProgress = {
+  id: number;
+  flashcardId: number;
+  studentId: number;
+  learned: boolean;
+  lastReviewed: string | null;
+};
+
 export async function markFlashcardLearned(flashcardId: number, learned: boolean) {
-  const response = await apiClient.post("/api/ai/flashcards/progress", { flashcardId, learned });
+  const response = await apiClient.post<FlashcardProgress>("/api/ai/flashcards/progress", { flashcardId, learned });
   return response.data;
 }

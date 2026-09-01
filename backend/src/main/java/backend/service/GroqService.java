@@ -3,6 +3,8 @@ package backend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import java.util.Map;
 @Service
 public class GroqService {
 
+    private static final Logger log = LoggerFactory.getLogger(GroqService.class);
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String apiKey;
@@ -32,8 +36,7 @@ public class GroqService {
         this.objectMapper = objectMapper;
         this.apiKey = apiKey;
         this.model = model;
-        System.out.println("Groq API key configured: " + (apiKey != null && !apiKey.isBlank()));
-        System.out.println("Groq model configured: " + model);
+        log.info("Groq API initialized (model={}, keyConfigured={})", model, (apiKey != null && !apiKey.isBlank()));
     }
 
     public String ask(String question, String context) {
@@ -62,8 +65,7 @@ public class GroqService {
                     .toEntity(String.class);
 
             String responseBody = response.getBody();
-            System.out.println("Groq HTTP status: " + response.getStatusCode());
-            System.out.println("Groq raw response body: " + responseBody);
+            log.debug("Groq HTTP status: {}", response.getStatusCode());
 
             JsonNode responseJson = objectMapper.readTree(responseBody);
 
@@ -75,12 +77,10 @@ public class GroqService {
                 throw new GroqServiceException("Groq returned an empty response.");
             }
 
-            System.out.println("Groq parsed assistant message: " + answer.asText());
             return answer.asText();
         } catch (RestClientResponseException ex) {
             String responseBody = ex.getResponseBodyAsString();
-            System.out.println("Groq HTTP status: " + ex.getStatusCode());
-            System.out.println("Groq raw response body: " + responseBody);
+            log.warn("Groq HTTP error: status={}, body={}", ex.getStatusCode(), responseBody);
             throw new GroqServiceException(
                     "Groq request failed with HTTP " + ex.getStatusCode().value()
                             + ". Response body: " + responseBody,

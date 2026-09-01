@@ -99,8 +99,8 @@ export const Route = createFileRoute("/studio")({
 });
 
 function axiosErrorMessage(error: unknown) {
-  if (axios.isAxiosError<{ error?: string }>(error)) {
-    return error.response?.data?.error ?? error.message;
+  if (axios.isAxiosError<{ error?: string; message?: string }>(error)) {
+    return error.response?.data?.error ?? error.response?.data?.message ?? error.message;
   }
   return error instanceof Error ? error.message : "Please try again.";
 }
@@ -245,7 +245,7 @@ function StudioContent() {
 
   useEffect(() => {
     if (selectedSession) setSelectedMaterialIds(selectedSession.materialIds);
-  }, [selectedSession?.id]);
+  }, [selectedSession]);
 
   return (
     <AppShell>
@@ -533,17 +533,19 @@ function TutorTab({
   const [historyLoading, setHistoryLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
+  const activeSessionId = session?.id;
+
   useEffect(() => {
-    if (!session) {
+    if (!activeSessionId) {
       setMessages([]);
       return;
     }
     setHistoryLoading(true);
-    getChatMessages(session.id)
+    getChatMessages(activeSessionId)
       .then(setMessages)
       .catch(() => toast.error("Could not load conversation", { description: "Please try again." }))
       .finally(() => setHistoryLoading(false));
-  }, [session?.id]);
+  }, [activeSessionId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });

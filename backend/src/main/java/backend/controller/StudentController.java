@@ -31,13 +31,6 @@ public class StudentController {
 
     }
 
-    @GetMapping
-    public List<StudentDTO> getAllStudents() {
-
-        return studentService.getAllStudents();
-
-    }
-
     @GetMapping("/profile")
     public StudentDTO getProfile() {
 

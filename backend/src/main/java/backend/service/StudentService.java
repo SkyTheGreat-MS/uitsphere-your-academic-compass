@@ -51,19 +51,6 @@ public class StudentService {
         return toDto(savedStudent);
     }
 
-    public List<StudentDTO> getAllStudents() {
-
-        List<Student> students = studentRepository.findAll();
-
-        return students.stream()
-                .map(student -> {
-
-                    return toDto(student);
-
-                })
-                .collect(Collectors.toList());
-    }
-
     public StudentDTO getCurrentStudent() {
 
         String email = SecurityContextHolder

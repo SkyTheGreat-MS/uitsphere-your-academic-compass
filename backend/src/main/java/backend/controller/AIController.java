@@ -39,10 +39,10 @@ public class AIController {
         String context = request.materialId() == null
                 ? request.context()
                 : materialContextService.getMaterialContext(request.materialId());
-        System.out.println("AI context length: " + (context == null ? 0 : context.length()));
+        log.debug("AI context length: {}", (context == null ? 0 : context.length()));
         if (context != null && !context.isBlank()) {
             int previewLength = Math.min(200, context.length());
-            System.out.println("AI context preview: \"" + context.substring(0, previewLength) + "\"");
+            log.debug("AI context preview: \"{}\"", context.substring(0, previewLength));
         }
         String answer = groqService.ask(request.prompt(), context);
         return new AIResponse(answer, answer);
@@ -50,7 +50,7 @@ public class AIController {
 
     @ExceptionHandler(GroqServiceException.class)
     public ResponseEntity<ErrorResponse> handleGroqServiceError(GroqServiceException ex) {
-        ex.printStackTrace();
+        log.error("Groq AI service error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                 .body(new ErrorResponse(ex.getMessage()));
     }

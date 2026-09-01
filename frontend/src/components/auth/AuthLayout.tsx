@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { GraduationCap, Sparkles, CalendarCheck, BrainCircuit } from "lucide-react";
 
 const highlights = [
-  { icon: BrainCircuit, title: "AI Learning Studio", body: "Turn any lecture into summaries, notes, flashcards and mock exams." },
+  { icon: BrainCircuit, title: "AI Learning Studio", body: "Turn any lecture into summaries, notes, flashcards and quizzes." },
   { icon: CalendarCheck, title: "One calm timetable", body: "Classes, deadlines and study goals in a single weekly view." },
   { icon: Sparkles, title: "Built for students", body: "Streaks, analytics and campus tools that keep momentum going." },
 ];

@@ -11,7 +11,6 @@ export async function askAI(question: string, materialId: number | null = null, 
     context,
     materialId,
   };
-  console.debug("POST /ai/chat payload:", JSON.stringify(payload));
 
   const response = await apiClient.post<AIResponse>("/ai/chat", payload);
 
