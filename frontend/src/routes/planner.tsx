@@ -5,8 +5,6 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import {
   Plus,
-  ChevronLeft,
-  ChevronRight,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -25,7 +23,6 @@ import {
 import { AppShell, PageHeader } from "@/components/layout/AppShell";
 import { SectionCard, EmptyState, PriorityBadge } from "@/components/common/Primitives";
 import { DatePickerField, PickerTrigger } from "@/components/common/DatePicker";
-import { fromISODate, toISODate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -57,7 +54,6 @@ import {
   updateStudyTask,
   toggleStudyTask,
   deleteStudyTask,
-  type PlannerClass,
   type PlannerFlashcard,
   type PlannerQuiz,
   type PlannerResource,
@@ -65,6 +61,16 @@ import {
   type StudyTaskInput,
   type TaskPriority,
 } from "@/api/plannerApi";
+import {
+  formatCountdown,
+  formatShortDate,
+  formatTime12,
+  getUpcomingEvents,
+  groupUpcomingEvents,
+  getYangonParts,
+  type GroupedPlannerEvents,
+  type UnifiedPlannerEvent,
+} from "@/lib/planner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/planner")({
@@ -74,53 +80,22 @@ export const Route = createFileRoute("/planner")({
       {
         name: "description",
         content:
-          "Your daily study workspace: today's classes, study tasks, recommended activities and upcoming work.",
+          "Your unified study workspace: live upcoming classes, study tasks, countdowns and recommended activities.",
       },
       { property: "og:title", content: "Study Planner — Ma-Haw-Tha-Dar" },
       {
         property: "og:description",
-        content: "Plan what to study and when with your real timetable and study activity.",
+        content: "Plan what to study and when with your real timetable and live study schedule.",
       },
     ],
   }),
   component: PlannerPage,
 });
 
-const WEEKDAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-function formatDayLabel(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(date);
-}
-
-function weekdayOf(date: Date) {
-  return WEEKDAY_NAMES[date.getDay()];
-}
-
-function addDays(date: Date, amount: number) {
-  const copy = new Date(date);
-  copy.setDate(copy.getDate() + amount);
-  return copy;
-}
-
-function isSameDay(a: Date, b: Date) {
-  return toISODate(a) === toISODate(b);
-}
-
 function PlannerPage() {
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  // Real current time in user's environment, updated live
+  const [now, setNow] = useState(() => new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<StudyTask | null>(null);
   const [form, setForm] = useState<StudyTaskInput>({
@@ -132,6 +107,14 @@ function PlannerPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Auto-refresh the clock every 10 seconds to update live countdowns and automatically remove passed events
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 10_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const {
     data: planner,
@@ -148,12 +131,14 @@ function PlannerPage() {
   const set = (updates: Partial<StudyTaskInput>) =>
     setForm((current) => ({ ...current, ...updates }));
 
+  const yangon = useMemo(() => getYangonParts(now), [now]);
+
   const openCreate = () => {
     setEditing(null);
     setForm({
       title: "",
       description: "",
-      dueDate: toISODate(selectedDate),
+      dueDate: yangon.isoDate,
       dueTime: null,
       priority: "medium",
     });
@@ -220,12 +205,10 @@ function PlannerPage() {
     }
   };
 
-  const selectedLabel = formatDayLabel(selectedDate);
-  const isToday = isSameDay(selectedDate, new Date());
-
+  // Top stats
   const stats = useMemo(() => {
     if (!planner) return null;
-    const day = weekdayOf(selectedDate);
+    const day = yangon.weekday;
     const classesToday = planner.classes.filter((c) => c.day === day);
     const openTasks = planner.tasks.filter((t) => t.status === "todo").length;
     const openQuizzes = planner.quizzes.filter((q) => !q.completed).length;
@@ -234,52 +217,41 @@ function PlannerPage() {
       0,
     );
     return { classesToday, openTasks, openQuizzes, cardsToReview, day };
-  }, [planner, selectedDate]);
+  }, [planner, yangon]);
 
-  const dayPlan = useMemo(() => {
-    if (!planner || !stats) return { classes: [] as PlannerClass[], tasks: [] as StudyTask[] };
-    const classes = planner.classes.find((c) => c.day === stats.day)
-      ? planner.classes.filter((c) => c.day === stats.day)
-      : [];
-    const dayIso = toISODate(selectedDate);
-    const tasks = planner.tasks.filter((t) => t.dueDate === dayIso);
-    return { classes, tasks };
-  }, [planner, stats, selectedDate]);
+  // Unified upcoming events schedule (chronological, filtered strictly to future datetime)
+  const upcomingEvents = useMemo(() => {
+    if (!planner) return [];
+    return getUpcomingEvents(planner.classes, planner.tasks, now);
+  }, [planner, now]);
 
-  const upcoming = useMemo(() => {
-    if (!planner)
+  // Grouped by day (Today, Tomorrow, etc.)
+  const groupedUpcoming = useMemo(() => {
+    return groupUpcomingEvents(upcomingEvents, now);
+  }, [upcomingEvents, now]);
+
+  // Non-scheduled study activities for side panel
+  const studyActivities = useMemo(() => {
+    if (!planner) {
       return {
-        classes: [] as PlannerClass[],
-        quizzes: [],
-        flashcards: [],
-        notes: [],
-        summaries: [],
+        quizzes: [] as PlannerQuiz[],
+        flashcards: [] as PlannerFlashcard[],
+        notes: [] as PlannerResource[],
+        summaries: [] as PlannerResource[],
       };
-    const dayIso = toISODate(selectedDate);
-    const startIndex = WEEKDAY_NAMES.indexOf(stats?.day ?? weekdayOf(selectedDate));
-
-    const ordered = [...planner.classes];
-    const upcomingClasses = [];
-    for (let offset = 0; offset < 7; offset += 1) {
-      const idx = (startIndex + offset) % 7;
-      const entries = ordered.filter((c) => c.day === WEEKDAY_NAMES[idx]);
-      entries.sort((a, b) => (a.startTime < b.startTime ? -1 : 1));
-      for (const entry of entries) upcomingClasses.push(entry);
     }
-
     const openQuizzes = planner.quizzes.filter((q) => !q.completed).slice(0, 4);
     const flashToReview = planner.flashcards.filter((f) => f.total - f.learned > 0).slice(0, 4);
     const notes = planner.notes.slice(0, 4);
     const summaries = planner.summaries.slice(0, 4);
 
     return {
-      classes: upcomingClasses,
       quizzes: openQuizzes,
       flashcards: flashToReview,
       notes,
       summaries,
     };
-  }, [planner, stats, selectedDate]);
+  }, [planner]);
 
   const classesTodayCount = stats?.classesToday.length ?? 0;
 
@@ -289,38 +261,9 @@ function PlannerPage() {
         title="Study Planner"
         description="What should you study and when?"
         actions={
-          <>
-            <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-lg"
-                onClick={() => setSelectedDate(addDays(selectedDate, -1))}
-                aria-label="Previous day"
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                className="h-8 rounded-lg px-3 text-sm font-medium"
-                onClick={() => setSelectedDate(new Date())}
-              >
-                Today
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-lg"
-                onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                aria-label="Next day"
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
-            <Button className="rounded-xl" onClick={openCreate}>
-              <Plus className="size-4" /> New task
-            </Button>
-          </>
+          <Button className="rounded-xl shadow-soft" onClick={openCreate}>
+            <Plus className="size-4" /> New task
+          </Button>
         }
       />
 
@@ -349,29 +292,12 @@ function PlannerPage() {
         />
       ) : (
         <>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Showing the plan for{" "}
-            <span className="font-semibold text-foreground">{selectedLabel}</span>
-            {!isToday && (
-              <>
-                {" "}
-                ·{" "}
-                <button
-                  className="font-semibold text-primary underline-offset-2 hover:underline"
-                  onClick={() => setSelectedDate(new Date())}
-                >
-                  jump to today
-                </button>
-              </>
-            )}
-          </p>
-
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <PlannerStat
               icon={GraduationCap}
-              label={`Classes · ${stats?.day}`}
+              label={`Classes · ${stats?.day ?? yangon.weekday}`}
               value={`${classesTodayCount}`}
-              hint={isToday ? "Today's timetable" : "This day's timetable"}
+              hint="Today's timetable"
             />
             <PlannerStat
               icon={ListChecks}
@@ -396,22 +322,28 @@ function PlannerPage() {
             />
           </div>
 
-          <div className="mt-6 grid gap-4 xl:grid-cols-3">
-            <div className="space-y-4 xl:col-span-2">
+          <div className="mt-6 grid gap-6 xl:grid-cols-3">
+            {/* Left Column: Unified Upcoming Schedule & Study Tasks */}
+            <div className="space-y-6 xl:col-span-2">
               <SectionCard
-                title="Today's plan"
-                description={selectedLabel}
+                title="Upcoming"
+                description="Live schedule of future classes, study tasks and deadlines"
                 action={
-                  <Badge variant="secondary" className="rounded-full text-[11px]">
-                    {isToday ? "Today" : selectedLabel}
-                  </Badge>
+                  upcomingEvents.length > 0 ? (
+                    <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                      {upcomingEvents.length} {upcomingEvents.length === 1 ? "upcoming item" : "upcoming items"}
+                    </Badge>
+                  ) : undefined
                 }
               >
-                <DayPlan
-                  selectedDate={selectedDate}
-                  classes={dayPlan.classes}
-                  tasks={dayPlan.tasks}
+                <UpcomingTimeline
+                  groupedEvents={groupedUpcoming}
+                  now={now}
                   onAddTask={openCreate}
+                  onToggleTask={toggle}
+                  onEditTask={openEdit}
+                  onDeleteTask={remove}
+                  deletingId={deletingId}
                 />
               </SectionCard>
 
@@ -435,13 +367,8 @@ function PlannerPage() {
               </SectionCard>
             </div>
 
-            <div className="space-y-4">
-              <SectionCard title="Upcoming" description="Next classes and study opportunities">
-                <ScrollArea className="max-h-[340px] pr-3">
-                  <UpcomingPanel upcoming={upcoming} />
-                </ScrollArea>
-              </SectionCard>
-
+            {/* Right Column: Recommendations & Study Activities */}
+            <div className="space-y-6">
               <SectionCard title="Recommended for you" description="Based on your real activity">
                 {!planner?.recommendations.length ? (
                   <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
@@ -474,11 +401,18 @@ function PlannerPage() {
                   </ul>
                 )}
               </SectionCard>
+
+              <SectionCard title="Study activities" description="Quizzes, flashcards & notes">
+                <ScrollArea className="max-h-[360px] pr-3">
+                  <StudyActivitiesPanel activities={studyActivities} />
+                </ScrollArea>
+              </SectionCard>
             </div>
           </div>
         </>
       )}
 
+      {/* Create / Edit Task Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="rounded-2xl sm:max-w-md">
           <DialogHeader>
@@ -607,52 +541,34 @@ function PlannerStat({
   );
 }
 
-function DayPlan({
-  selectedDate,
-  classes,
-  tasks,
+/**
+ * Unified upcoming chronological timeline component.
+ */
+function UpcomingTimeline({
+  groupedEvents,
+  now,
   onAddTask,
+  onToggleTask,
+  onEditTask,
+  onDeleteTask,
+  deletingId,
 }: {
-  selectedDate: Date;
-  classes: PlannerClass[];
-  tasks: StudyTask[];
+  groupedEvents: GroupedPlannerEvents[];
+  now: Date;
   onAddTask: () => void;
+  onToggleTask: (task: StudyTask) => void;
+  onEditTask: (task: StudyTask) => void;
+  onDeleteTask: (id: number) => void;
+  deletingId: number | null;
 }) {
-  const isToday = isSameDay(selectedDate, new Date());
-  const items: { time: string; type: string; title: string; sub: string }[] = [];
+  const nowMs = now.getTime();
 
-  for (const c of classes) {
-    items.push({
-      time: c.startTime,
-      type: "class",
-      title: `${c.subjectName} (${c.subjectCode})`,
-      sub: `Room ${c.room} · ${c.type} · ends ${c.endTime}`,
-    });
-  }
-  for (const t of tasks) {
-    items.push({
-      time: t.dueTime ?? "Anytime",
-      type: "task",
-      title: t.title,
-      sub: t.description || t.priority,
-    });
-  }
-  items.sort((a, b) => {
-    if (a.time === "Anytime") return 1;
-    if (b.time === "Anytime") return -1;
-    return a.time < b.time ? -1 : 1;
-  });
-
-  if (!items.length) {
+  if (!groupedEvents.length) {
     return (
       <EmptyState
         icon={CalendarDays}
-        title={isToday ? "No plan for today" : "Nothing planned for this day"}
-        description={
-          isToday
-            ? "No classes today and no study tasks due. Create a task to start planning your study session."
-            : "There are no classes or study tasks scheduled for this date."
-        }
+        title="You're all caught up"
+        description="No upcoming classes or tasks scheduled."
         action={
           <Button className="rounded-xl" onClick={onAddTask}>
             <Plus className="size-4" /> New task
@@ -663,51 +579,138 @@ function DayPlan({
   }
 
   return (
-    <ul className="relative space-y-3 pl-6">
-      <span className="absolute inset-y-0 left-2 w-px bg-border" aria-hidden />
-      {items.map((item, i) => (
-        <motion.li
-          key={`${item.type}-${item.title}-${i}`}
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.05, duration: 0.3 }}
-          className="relative"
-        >
-          <span
-            className={cn(
-              "absolute -left-6 top-3.5 size-4 rounded-full border-4 border-card",
-              item.type === "class" ? "bg-chart-1" : "bg-primary",
-            )}
-            aria-hidden
-          />
-          <Card className="hover-lift gap-0 rounded-2xl border-border p-4 shadow-soft">
-            <div className="flex items-start gap-3">
-              <div className="shrink-0 pt-0.5 text-sm font-semibold tabular-nums">{item.time}</div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{item.title}</p>
-                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-                  {item.type === "class" ? (
-                    <MapPin className="size-3" />
-                  ) : (
-                    <CheckCircle2 className="size-3" />
+    <div className="space-y-6">
+      {groupedEvents.map((group) => (
+        <div key={group.dateKey} className="space-y-3">
+          {/* Day Group Header */}
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={group.isToday ? "default" : "secondary"}
+              className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+            >
+              {group.label}
+            </Badge>
+            <span className="text-xs font-medium text-muted-foreground">{group.formattedDate}</span>
+            <span className="h-px flex-1 bg-border/60" aria-hidden />
+          </div>
+
+          {/* Chronological events list */}
+          <ul className="relative space-y-3 pl-6">
+            <span className="absolute inset-y-2 left-2 w-px bg-border" aria-hidden />
+            {group.events.map((item, i) => (
+              <motion.li
+                key={item.id}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04, duration: 0.25 }}
+                className="relative"
+              >
+                <span
+                  className={cn(
+                    "absolute -left-6 top-4 size-4 rounded-full border-4 border-card shadow-xs",
+                    item.type === "class" ? "bg-chart-1" : "bg-primary",
                   )}
-                  {item.sub}
-                </p>
-              </div>
-              {item.type === "class" ? (
-                <Badge variant="secondary" className="shrink-0 rounded-full text-[10px]">
-                  Class
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="shrink-0 rounded-full text-[10px]">
-                  Task
-                </Badge>
-              )}
-            </div>
-          </Card>
-        </motion.li>
+                  aria-hidden
+                />
+                <Card className="hover-lift gap-0 rounded-2xl border-border p-4 shadow-soft">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      {item.type === "task" && item.originalTask && (
+                        <Checkbox
+                          checked={item.originalTask.status === "completed"}
+                          onCheckedChange={() => onToggleTask(item.originalTask!)}
+                          className="mt-1"
+                          aria-label="Mark task as completed"
+                        />
+                      )}
+                      <div className="shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-foreground">
+                        {item.displayTime}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{item.title}</p>
+                        <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                          {item.type === "class" ? (
+                            <>
+                              <MapPin className="size-3 shrink-0 text-muted-foreground" />
+                              <span>Room {item.room}</span>
+                              <span>·</span>
+                              <span>{item.classType}</span>
+                              {item.endTime && <span>· ends {item.endTime}</span>}
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="size-3 shrink-0 text-primary" />
+                              <span>{item.subtitle || "Study task"}</span>
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border/40 pt-2 sm:border-0 sm:pt-0">
+                      {/* Live countdown badge */}
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1 rounded-full border-primary/25 bg-primary-soft/80 px-2.5 py-0.5 text-[11px] font-medium text-primary"
+                      >
+                        <Clock className="size-3" />
+                        <span>{formatCountdown(item.targetDateTimeMs, nowMs)}</span>
+                      </Badge>
+
+                      {/* Type badge */}
+                      {item.type === "class" ? (
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 rounded-full text-[10px] font-semibold uppercase tracking-wider"
+                        >
+                          Class
+                        </Badge>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Badge
+                            variant="outline"
+                            className="shrink-0 rounded-full text-[10px] font-semibold uppercase tracking-wider"
+                          >
+                            Task
+                          </Badge>
+                          {item.originalTask && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-7 rounded-lg"
+                                onClick={() => onEditTask(item.originalTask!)}
+                                aria-label="Edit task"
+                              >
+                                <Pencil className="size-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-7 rounded-lg text-destructive hover:text-destructive"
+                                onClick={() => onDeleteTask(item.originalTask!.id)}
+                                disabled={deletingId === item.originalTask!.id}
+                                aria-label="Delete task"
+                              >
+                                {deletingId === item.originalTask!.id ? (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="size-3.5" />
+                                )}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -771,7 +774,7 @@ function TaskList({
                 </p>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
                   {task.dueDate ? formatShortDate(task.dueDate) : "No date"}
-                  {task.dueTime ? ` · ${formatTime(task.dueTime)}` : ""}
+                  {task.dueTime ? ` · ${formatTime12(task.dueTime)}` : ""}
                   {task.description ? ` · ${task.description}` : ""}
                 </p>
               </div>
@@ -807,18 +810,6 @@ function TaskList({
       })}
     </ul>
   );
-}
-
-function formatShortDate(iso: string) {
-  const date = fromISODate(iso);
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
-}
-
-function formatTime(value: string) {
-  const [h, m] = value.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
 }
 
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -870,14 +861,14 @@ function TimePickerField({
       <PopoverTrigger asChild>
         <PickerTrigger
           id={id}
-          aria-label={value ? `Due time, ${formatTime(value)}` : "No due time"}
+          aria-label={value ? `Due time, ${formatTime12(value)}` : "No due time"}
           aria-haspopup="dialog"
           aria-expanded={open}
           onClear={value ? () => onChange(null) : undefined}
         >
           <Clock className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           {value ? (
-            <span className="truncate">{formatTime(value)}</span>
+            <span className="truncate">{formatTime12(value)}</span>
           ) : (
             <span className="truncate text-muted-foreground">No time selected</span>
           )}
@@ -894,7 +885,7 @@ function TimePickerField({
               Time
             </p>
             <p className="text-sm font-semibold tabular-nums">
-              {formatTime(
+              {formatTime12(
                 `${String(previewHours24).padStart(2, "0")}:${String(draft.minute).padStart(2, "0")}`,
               )}
             </p>
@@ -987,11 +978,10 @@ function RecommendationIcon({ type }: { type: string }) {
   }
 }
 
-function UpcomingPanel({
-  upcoming,
+function StudyActivitiesPanel({
+  activities,
 }: {
-  upcoming: {
-    classes: PlannerClass[];
+  activities: {
     quizzes: PlannerQuiz[];
     flashcards: PlannerFlashcard[];
     notes: PlannerResource[];
@@ -999,55 +989,28 @@ function UpcomingPanel({
   };
 }) {
   const hasAnything =
-    upcoming.classes.length ||
-    upcoming.quizzes.length ||
-    upcoming.flashcards.length ||
-    upcoming.notes.length ||
-    upcoming.summaries.length;
+    activities.quizzes.length ||
+    activities.flashcards.length ||
+    activities.notes.length ||
+    activities.summaries.length;
 
   if (!hasAnything) {
     return (
       <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-        No upcoming classes, materials or study activity yet.
+        No active quizzes, flashcards or study materials yet.
       </p>
     );
   }
 
   return (
     <div className="space-y-4">
-      {upcoming.classes.length > 0 && (
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Classes
-          </p>
-          <ul className="space-y-2">
-            {upcoming.classes.map((c) => (
-              <li
-                key={`${c.day}-${c.startTime}-${c.subjectCode}`}
-                className="flex items-center gap-3 rounded-xl border border-border p-2.5"
-              >
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-chart-1/10 text-chart-1">
-                  <GraduationCap className="size-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{c.subjectName}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {c.day} · {c.startTime} · Room {c.room}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {upcoming.quizzes.length > 0 && (
+      {activities.quizzes.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Quizzes to complete
           </p>
           <ul className="space-y-2">
-            {upcoming.quizzes.map((q) => (
+            {activities.quizzes.map((q) => (
               <li
                 key={`quiz-${q.id}`}
                 className="flex items-center gap-3 rounded-xl border border-border p-2.5"
@@ -1068,13 +1031,13 @@ function UpcomingPanel({
         </div>
       )}
 
-      {upcoming.flashcards.length > 0 && (
+      {activities.flashcards.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Flashcards to review
           </p>
           <ul className="space-y-2">
-            {upcoming.flashcards.map((f) => (
+            {activities.flashcards.map((f) => (
               <li
                 key={`flash-${f.id}`}
                 className="flex items-center gap-3 rounded-xl border border-border p-2.5"
@@ -1097,13 +1060,13 @@ function UpcomingPanel({
         </div>
       )}
 
-      {(upcoming.notes.length > 0 || upcoming.summaries.length > 0) && (
+      {(activities.notes.length > 0 || activities.summaries.length > 0) && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Review from Studio
           </p>
           <ul className="space-y-2">
-            {upcoming.summaries.map((s) => (
+            {activities.summaries.map((s) => (
               <li
                 key={`sum-${s.id}`}
                 className="flex items-center gap-3 rounded-xl border border-border p-2.5"
@@ -1115,9 +1078,12 @@ function UpcomingPanel({
                   <p className="truncate text-sm font-medium">{s.title}</p>
                   <p className="text-[11px] text-muted-foreground">Summary</p>
                 </div>
+                <Button asChild variant="ghost" size="sm" className="rounded-lg">
+                  <Link to="/studio">Open</Link>
+                </Button>
               </li>
             ))}
-            {upcoming.notes.map((n) => (
+            {activities.notes.map((n) => (
               <li
                 key={`note-${n.id}`}
                 className="flex items-center gap-3 rounded-xl border border-border p-2.5"
@@ -1129,6 +1095,9 @@ function UpcomingPanel({
                   <p className="truncate text-sm font-medium">{n.title}</p>
                   <p className="text-[11px] text-muted-foreground">Smart notes</p>
                 </div>
+                <Button asChild variant="ghost" size="sm" className="rounded-lg">
+                  <Link to="/studio">Open</Link>
+                </Button>
               </li>
             ))}
           </ul>

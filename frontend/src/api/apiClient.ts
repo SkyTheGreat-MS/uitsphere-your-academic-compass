@@ -5,7 +5,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
   const method = config.method?.toLowerCase();
   const isPublicAuthRequest =
     method === "post" && (config.url === "/students" || config.url === "/students/login");
@@ -25,9 +25,11 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("student");
-      window.dispatchEvent(new Event("auth:unauthorized"));
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("student");
+        window.dispatchEvent(new Event("auth:unauthorized"));
+      }
     }
     return Promise.reject(error);
   },

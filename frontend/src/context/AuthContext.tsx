@@ -35,13 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearSession = () => {
     setStudent(null);
     setToken(null);
-    localStorage.removeItem("student");
-    localStorage.removeItem("token");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("student");
+      sessionStorage.removeItem("token");
+    }
     queryClient.clear();
   };
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
+    if (typeof window === "undefined") {
+      setIsLoading(false);
+      return;
+    }
+
+    const savedToken = sessionStorage.getItem("token");
 
     if (!savedToken) {
       setIsLoading(false);
@@ -52,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getStudent()
       .then((currentStudent) => {
         setStudent(currentStudent);
-        localStorage.setItem("student", JSON.stringify(currentStudent));
+        sessionStorage.setItem("student", JSON.stringify(currentStudent));
       })
       .catch(() => {
         clearSession();
@@ -64,48 +71,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "token") {
-        const savedToken = localStorage.getItem("token");
-        if (savedToken !== token) {
-          queryClient.clear();
-          if (!savedToken) {
-            setStudent(null);
-            setToken(null);
-            localStorage.removeItem("student");
-          } else {
-            setToken(savedToken);
-            getStudent()
-              .then((currentStudent) => {
-                setStudent(currentStudent);
-                localStorage.setItem("student", JSON.stringify(currentStudent));
-              })
-              .catch(() => clearSession());
-          }
-        }
-      }
-    };
-    window.addEventListener("storage", handleStorage);
     const handleUnauthorized = () => {
       clearSession();
     };
     window.addEventListener("auth:unauthorized", handleUnauthorized);
     return () => {
-      window.removeEventListener("storage", handleStorage);
       window.removeEventListener("auth:unauthorized", handleUnauthorized);
     };
-  }, [token, queryClient]);
+  }, [queryClient]);
 
   const login = async (nextToken: string) => {
     setIsLoading(true);
     queryClient.clear();
     setToken(nextToken);
-    localStorage.setItem("token", nextToken);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("token", nextToken);
+    }
 
     try {
       const currentStudent = await getStudent();
       setStudent(currentStudent);
-      localStorage.setItem("student", JSON.stringify(currentStudent));
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("student", JSON.stringify(currentStudent));
+      }
     } catch (error) {
       clearSession();
       throw error;
@@ -121,7 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateStudent = async (updates: Partial<Student>) => {
     const currentStudent = { ...student, ...updates };
     setStudent(currentStudent);
-    localStorage.setItem("student", JSON.stringify(currentStudent));
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("student", JSON.stringify(currentStudent));
+    }
   };
 
   return (
@@ -140,3 +130,4 @@ export function useAuth() {
 
   return context;
 }
+
