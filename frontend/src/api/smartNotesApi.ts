@@ -19,3 +19,12 @@ export async function getSmartNotes() {
   const response = await apiClient.get<GeneratedSmartNote[]>("/api/ai/notes");
   return response.data;
 }
+
+export async function getSmartNote(id: number) {
+  const response = await apiClient.get<GeneratedSmartNote>(`/api/ai/notes/${id}`);
+  return response.data;
+}
+
+export async function deleteSmartNote(id: number) {
+  await apiClient.delete(`/api/ai/notes/${id}`);
+}

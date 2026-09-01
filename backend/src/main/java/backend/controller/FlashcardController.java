@@ -61,7 +61,10 @@ public class FlashcardController {
 
     @ExceptionHandler(LearningMaterialException.class)
     public ResponseEntity<ErrorResponse> handleMaterialError(LearningMaterialException ex) {
-        return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage()));
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler({ GroqServiceException.class, FlashcardGenerationException.class })

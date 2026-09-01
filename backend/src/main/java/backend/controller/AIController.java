@@ -58,7 +58,10 @@ public class AIController {
     @ExceptionHandler(LearningMaterialException.class)
     public ResponseEntity<ErrorResponse> handleMaterialContextError(LearningMaterialException ex) {
         log.warn("AI material context request failed: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status)
                 .body(new ErrorResponse(ex.getMessage()));
     }
 

@@ -57,8 +57,26 @@ public class SummaryService {
                 .toList();
     }
 
+    public SummaryResponse get(Long id) {
+        Student student = currentStudent();
+        Summary summary = summaryRepository.findByIdAndStudent(id, student)
+                .orElseThrow(() -> new LearningMaterialException("Summary not found."));
+        return SummaryResponse.from(summary);
+    }
+
+    public void delete(Long id) {
+        Student student = currentStudent();
+        Summary summary = summaryRepository.findByIdAndStudent(id, student)
+                .orElseThrow(() -> new LearningMaterialException("Summary not found."));
+        summaryRepository.delete(summary);
+    }
+
     private Student currentStudent() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equals(auth.getName())) {
+            throw new LearningMaterialException("User is not authenticated.");
+        }
+        String email = auth.getName();
         return studentRepository.findByEmail(email)
                 .orElseThrow(() -> new LearningMaterialException("Authenticated student not found."));
     }

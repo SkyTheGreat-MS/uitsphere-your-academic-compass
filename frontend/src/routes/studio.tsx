@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { createFileRoute } from "@tanstack/react-router";
@@ -26,6 +26,7 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import {
   createChatSession,
+  deleteChatSession,
   getChatMessages,
   getChatSessions,
   sendChatMessage,
@@ -38,8 +39,8 @@ import {
   uploadMaterial,
   type LearningMaterial,
 } from "@/api/materialsApi";
-import { generateSummary, getSummaries, type GeneratedSummary } from "@/api/summaryApi";
-import { generateSmartNotes, getSmartNotes, type GeneratedSmartNote } from "@/api/smartNotesApi";
+import { deleteSummary, generateSummary, getSummaries, type GeneratedSummary } from "@/api/summaryApi";
+import { deleteSmartNote, generateSmartNotes, getSmartNotes, type GeneratedSmartNote } from "@/api/smartNotesApi";
 import {
   deleteFlashcardDeck,
   generateFlashcards,
@@ -74,18 +75,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/context/AuthContext";
+import { MarkdownContent } from "@/components/common/MarkdownContent";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/studio")({
   head: () => ({
     meta: [
-      { title: "AI Learning Studio â€” Ma-Haw-Tha-Dar" },
+      { title: "AI Learning Studio — Ma-Haw-Tha-Dar" },
       {
         name: "description",
         content:
           "Turn lecture materials into AI tutoring, summaries, smart notes, flashcards and quizzes.",
       },
-      { property: "og:title", content: "AI Learning Studio â€” Ma-Haw-Tha-Dar" },
+      { property: "og:title", content: "AI Learning Studio — Ma-Haw-Tha-Dar" },
       {
         property: "og:description",
         content: "Your AI-powered study workspace for university lectures and revision.",
@@ -125,6 +128,13 @@ function formatTimestamp(value: string) {
 }
 
 function StudioPage() {
+  const { student, token } = useAuth();
+  return <StudioContent key={student?.email || token || "guest"} />;
+}
+
+function StudioContent() {
+  const { student, token } = useAuth();
+  const [activeTab, setActiveTab] = useState("tutor");
   const [materials, setMaterials] = useState<LearningMaterial[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
@@ -139,15 +149,28 @@ function StudioPage() {
   const refreshDashboard = () => void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
   useEffect(() => {
+    if (!token) {
+      setMaterials([]);
+      setMaterialsLoading(false);
+      return;
+    }
+    setMaterialsLoading(true);
     getMaterials()
       .then(setMaterials)
       .catch(() =>
         toast.error("Could not load learning materials", { description: "Please try again." }),
       )
       .finally(() => setMaterialsLoading(false));
-  }, []);
+  }, [token]);
 
   useEffect(() => {
+    if (!token) {
+      setSessions([]);
+      setSelectedSessionId(null);
+      setSessionsLoading(false);
+      return;
+    }
+    setSessionsLoading(true);
     getChatSessions() 
       .then((loadedSessions) => {
         setSessions(loadedSessions);
@@ -155,7 +178,11 @@ function StudioPage() {
       })
       .catch(() => toast.error("Could not load chat history", { description: "Please try again." }))
       .finally(() => setSessionsLoading(false));
-  }, []);
+  }, [token]);
+
+  useEffect(() => {
+    setSelectedMaterialIds([]);
+  }, [token]);
 
   const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -200,6 +227,20 @@ function StudioPage() {
     }
   };
 
+  const handleDeleteSession = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    try {
+      await deleteChatSession(id);
+      setSessions((current) => current.filter((s) => s.id !== id));
+      if (selectedSessionId === id) {
+        setSelectedSessionId((current) => sessions.find((s) => s.id !== id)?.id ?? null);
+      }
+      toast.success("Chat deleted");
+    } catch (error) {
+      toast.error("Could not delete chat", { description: axiosErrorMessage(error) });
+    }
+  };
+
   const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null;
 
   useEffect(() => {
@@ -214,7 +255,7 @@ function StudioPage() {
             <Sparkles className="size-6 shrink-0 text-primary" /> AI Learning Studio
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Semester IV Â· Enterprise Applications Development using Java
+            Semester IV · Enterprise Applications Development using Java
           </p>
         </div>
         <>
@@ -235,7 +276,7 @@ function StudioPage() {
             ) : (
               <Upload className="size-4" />
             )}
-            {uploading ? "Uploadingâ€¦" : "Upload lecture materials (PDF, images)"}
+            {uploading ? "Uploading…" : "Upload lecture materials (PDF, images)"}
           </Button>
         </>
       </div>
@@ -243,9 +284,16 @@ function StudioPage() {
       <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
         <div className="space-y-4">
           <Card id="learning-materials" className="gap-0 rounded-2xl border-border p-4 shadow-soft">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Learning materials
-            </h2>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Learning materials
+              </h2>
+              {selectedMaterialIds.length > 0 && (
+                <Badge variant="secondary" className="text-[10px] font-semibold">
+                  {selectedMaterialIds.length} selected
+                </Badge>
+              )}
+            </div>
             {materialsLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-16 w-full rounded-xl" />
@@ -256,105 +304,144 @@ function StudioPage() {
                 No learning materials yet. Upload a lecture file to get started.
               </p>
             ) : (
-              <ul className="space-y-2">
-                {materials.map((material) => (
-                  <li
-                    key={material.id}
-                    className={cn(
-                      "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 rounded-xl border p-1",
-                      selectedMaterialIds.includes(material.id)
-                        ? "border-primary/40 bg-primary-soft"
-                        : "border-border",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      className="min-w-0 rounded-lg p-2 text-left hover:bg-muted/60"
-                      disabled={material.status !== "READY"}
-                      onClick={() =>
-                        setSelectedMaterialIds((current) =>
-                          current.includes(material.id)
-                            ? current.filter((id) => id !== material.id)
-                            : [...current, material.id],
-                        )
-                      }
-                    >
-                      <p className="truncate text-xs font-semibold">{material.fileName}</p>
-                      <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                        {material.fileType} Â· {formatUploadDate(material.uploadedAt)}
-                      </p>
-                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        {formatMaterialStatus(material.status)}
-                      </p>
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Delete ${material.fileName}`}
-                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-                      disabled={deletingId === material.id}
-                      onClick={() => handleDelete(material.id)}
-                    >
-                      {deletingId === material.id ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="size-3.5" />
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <div className="max-h-[260px] overflow-y-auto pr-1">
+                <ul className="space-y-2">
+                  {materials.map((material) => {
+                    const isSelected = selectedMaterialIds.includes(material.id);
+                    const isReady = material.status === "READY";
+                    return (
+                      <li
+                        key={material.id}
+                        className={cn(
+                          "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 rounded-xl border p-1 transition-colors",
+                          isSelected
+                            ? "border-primary/40 bg-primary-soft"
+                            : "border-border",
+                          !isReady && "opacity-60",
+                        )}
+                      >
+                        <button
+                          type="button"
+                          className={cn(
+                            "min-w-0 rounded-lg p-2 text-left hover:bg-muted/60",
+                            !isReady && "cursor-not-allowed",
+                          )}
+                          disabled={!isReady}
+                          onClick={() =>
+                            setSelectedMaterialIds((current) =>
+                              current.includes(material.id)
+                                ? current.filter((id) => id !== material.id)
+                                : [...current, material.id],
+                            )
+                          }
+                        >
+                          <div className="flex items-center justify-between gap-1.5">
+                            <p className="truncate text-xs font-semibold">{material.fileName}</p>
+                            {isSelected && (
+                              <CheckCircle2 className="size-3.5 shrink-0 text-primary" />
+                            )}
+                          </div>
+                          <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                            {material.fileType} · {formatUploadDate(material.uploadedAt)}
+                          </p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {formatMaterialStatus(material.status)}
+                          </p>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Delete ${material.fileName}`}
+                          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                          disabled={deletingId === material.id}
+                          onClick={() => handleDelete(material.id)}
+                        >
+                          {deletingId === material.id ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-3.5" />
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </Card>
 
-          <Card className="gap-0 rounded-2xl border-border p-4 shadow-soft">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Chat history
-            </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mb-3 h-8 rounded-lg px-2 text-xs"
-              onClick={handleNewSession}
-            >
-              <MessageSquarePlus className="size-3.5" /> New chat
-            </Button>
-            <ul className="space-y-2">
-              {sessions.map((session) => {
-                const s = {
-                  title: session.title,
-                  tool: session.materialTitle ?? "General knowledge",
-                  when: formatChatTime(session.updatedAt),
-                };
-                return (
-                  <li
-                    key={session.id}
-                    onClick={() => setSelectedSessionId(session.id)}
-                    className={cn(
-                      "flex cursor-pointer items-start gap-3 rounded-xl p-3 transition-colors",
-                      selectedSessionId === session.id
-                        ? "bg-primary-soft border border-primary/30"
-                        : "hover:bg-muted/60",
-                    )}
-                  >
-                    <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-accent/40 text-accent-foreground">
-                      <Clock3 className="size-3.5" />
-                    </span>
+          {activeTab === "tutor" && (
+            <Card className="gap-0 rounded-2xl border-border p-4 shadow-soft">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Chat history
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mb-3 h-8 rounded-lg px-2 text-xs"
+                onClick={handleNewSession}
+              >
+                <MessageSquarePlus className="size-3.5" /> New chat
+              </Button>
+              {sessionsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                </div>
+              ) : sessions.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                  No chat history yet.
+                </p>
+              ) : (
+                <div className="max-h-[300px] overflow-y-auto pr-1">
+                  <ul className="space-y-2">
+                    {sessions.map((session) => {
+                      const s = {
+                        title: session.title,
+                        tool: session.materialTitle ?? "General knowledge",
+                        when: formatChatTime(session.updatedAt),
+                      };
+                      return (
+                        <li
+                          key={session.id}
+                          onClick={() => setSelectedSessionId(session.id)}
+                          className={cn(
+                            "group flex cursor-pointer items-start justify-between gap-2 rounded-xl p-2.5 transition-colors",
+                            selectedSessionId === session.id
+                              ? "bg-primary-soft border border-primary/30"
+                              : "hover:bg-muted/60",
+                          )}
+                        >
+                          <div className="flex min-w-0 items-start gap-2.5">
+                            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-accent/40 text-accent-foreground">
+                              <Clock3 className="size-3.5" />
+                            </span>
 
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium">{session.title}</p>
-
-                      <p className="text-[11px] text-muted-foreground">
-                        {s.tool} Â· {s.when}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </Card>
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-medium">{session.title}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {s.tool} · {s.when}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={`Delete chat ${session.title}`}
+                            className="rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                            onClick={(e) => handleDeleteSession(e, session.id)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
 
-        <Tabs defaultValue="tutor" className="min-w-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl p-1">
             {[
               { v: "tutor", l: "AI Tutor", i: Sparkles },
@@ -371,6 +458,7 @@ function StudioPage() {
 
           <TabsContent value="tutor" className="mt-4">
             <TutorTab
+              key={student?.email ?? "guest"}
               materials={materials}
               selectedMaterialIds={selectedMaterialIds}
               onSelectMaterials={setSelectedMaterialIds}
@@ -385,13 +473,24 @@ function StudioPage() {
             />
           </TabsContent>
           <TabsContent value="summary" className="mt-4">
-            <SummaryTab materials={materials} selectedMaterialIds={selectedMaterialIds} onSelectMaterials={setSelectedMaterialIds} />
+            <SummaryTab
+              key={student?.email ?? "guest"}
+              materials={materials}
+              selectedMaterialIds={selectedMaterialIds}
+              onSelectMaterials={setSelectedMaterialIds}
+            />
           </TabsContent>
           <TabsContent value="notes" className="mt-4">
-            <NotesTab materials={materials} selectedMaterialIds={selectedMaterialIds} onSelectMaterials={setSelectedMaterialIds} />
+            <NotesTab
+              key={student?.email ?? "guest"}
+              materials={materials}
+              selectedMaterialIds={selectedMaterialIds}
+              onSelectMaterials={setSelectedMaterialIds}
+            />
           </TabsContent>
           <TabsContent value="flashcards" className="mt-4">
             <FlashcardsTab
+              key={student?.email ?? "guest"}
               materials={materials}
               selectedMaterialIds={selectedMaterialIds}
               onSelectMaterials={setSelectedMaterialIds}
@@ -399,6 +498,7 @@ function StudioPage() {
           </TabsContent>
           <TabsContent value="quiz" className="mt-4">
             <QuizTab
+              key={student?.email ?? "guest"}
               materials={materials}
               selectedMaterialIds={selectedMaterialIds}
               onSelectMaterials={setSelectedMaterialIds}
@@ -425,6 +525,8 @@ function TutorTab({
   session: ChatSession | null;
   onEnsureSession: () => Promise<number>;
 }) {
+  const { student } = useAuth();
+  const userInitials = student?.avatarInitials ?? (student?.name ? student.name.slice(0, 2).toUpperCase() : "ME");
   const [messages, setMessages] = useState<ChatHistoryMessage[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -509,7 +611,7 @@ function TutorTab({
                         : "bg-muted text-muted-foreground",
                     )}
                   >
-                    {m.role === "ASSISTANT" ? "AI" : "AO"}
+                    {m.role === "ASSISTANT" ? "AI" : userInitials}
                   </AvatarFallback>
                 </Avatar>
                 <div className={cn("max-w-[78%] min-w-0", m.role === "USER" && "text-right")}>
@@ -521,7 +623,11 @@ function TutorTab({
                         : "border border-border bg-card text-card-foreground",
                     )}
                   >
-                    {m.content}
+                    {m.role === "ASSISTANT" ? (
+                      <MarkdownContent content={m.content} />
+                    ) : (
+                      m.content
+                    )}
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {formatChatTime(m.createdAt)}
@@ -562,54 +668,6 @@ function TutorTab({
       </ScrollArea>
 
       <div className="border-t border-border p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-muted-foreground">Lecture materials</p>
-          <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
-            {selectedMaterialIds.length} selected
-          </span>
-        </div>
-        <div className="mb-4 grid max-h-44 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
-          {materials.map((material) => {
-            const selected = selectedMaterialIds.includes(material.id);
-            const ready = material.status === "READY";
-            return (
-              <button
-                key={material.id}
-                type="button"
-                disabled={!ready}
-                onClick={() =>
-                  onSelectMaterials(
-                    selected
-                      ? selectedMaterialIds.filter((id) => id !== material.id)
-                      : [...selectedMaterialIds, material.id],
-                  )
-                }
-                className={cn(
-                  "flex items-start gap-3 rounded-xl border bg-card p-3 text-left transition-colors",
-                  selected
-                    ? "border-primary bg-primary-soft"
-                    : "border-border hover:border-primary/40",
-                  !ready && "cursor-not-allowed opacity-60",
-                )}
-              >
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-primary">
-                  <FileText className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-semibold">{material.fileName}</span>
-                  <span className="mt-1 block truncate text-[11px] text-muted-foreground">
-                    Enterprise Applications Development using Java
-                  </span>
-                  <span className="mt-1 block text-[10px] text-muted-foreground">
-                    {material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â·{" "}
-                    {formatMaterialStatus(material.status)}
-                  </span>
-                </span>
-                {selected && <CheckCircle2 className="size-4 shrink-0 text-primary" />}
-              </button>
-            );
-          })}
-        </div>
         <form
           className="flex items-center gap-2"
           onSubmit={(e) => {
@@ -620,7 +678,7 @@ function TutorTab({
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything about your lecture materialsâ€¦"
+            placeholder="Ask anything about your lecture materials…"
             className="h-11 rounded-xl"
           />
           <Button
@@ -628,6 +686,7 @@ function TutorTab({
             size="icon"
             className="size-11 shrink-0 rounded-xl"
             aria-label="Send message"
+            disabled={typing || !input.trim()}
           >
             <Send className="size-4" />
           </Button>
@@ -648,6 +707,7 @@ function SummaryTab({
   selectedMaterialIds: number[];
   onSelectMaterials: (ids: number[]) => void;
 }) {
+  const { token } = useAuth();
   const [summaries, setSummaries] = useState<GeneratedSummary[]>([]);
   const [activeSummary, setActiveSummary] = useState<GeneratedSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -655,11 +715,21 @@ function SummaryTab({
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!token) {
+      setSummaries([]);
+      setActiveSummary(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     getSummaries()
-      .then((loaded) => { setSummaries(loaded); setActiveSummary(loaded[0] ?? null); })
+      .then((loaded) => {
+        setSummaries(loaded);
+        setActiveSummary(loaded[0] ?? null);
+      })
       .catch((error) => toast.error("Could not load summaries", { description: axiosErrorMessage(error) }))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   const toggleMaterial = (id: number) => onSelectMaterials(
     selectedMaterialIds.includes(id)
@@ -681,6 +751,24 @@ function SummaryTab({
     } finally { setGenerating(false); }
   };
 
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    try {
+      await deleteSummary(id);
+      setSummaries((current) => {
+        const next = current.filter((s) => s.id !== id);
+        if (activeSummary?.id === id) {
+          setActiveSummary(next[0] ?? null);
+        }
+        return next;
+      });
+      toast.success("Summary deleted");
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (error) {
+      toast.error("Could not delete summary", { description: axiosErrorMessage(error) });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card className="rounded-2xl border-border p-5 shadow-soft">
@@ -691,13 +779,13 @@ function SummaryTab({
             {generating ? "Generating..." : "Generate Summary"}
           </Button>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid max-h-[280px] gap-3 overflow-y-auto pr-1 md:grid-cols-2">
           {materials.length === 0 ? <p className="text-sm text-muted-foreground">Upload a lecture to begin.</p> : materials.map((material) => {
             const selected = selectedMaterialIds.includes(material.id);
             const ready = material.status === "READY";
             return <button type="button" key={material.id} disabled={!ready} onClick={() => toggleMaterial(material.id)} className={cn("flex items-start gap-3 rounded-xl border p-4 text-left transition", selected ? "border-primary bg-primary-soft/60" : "border-border bg-white hover:border-primary/50", !ready && "cursor-not-allowed opacity-50")}>
               <FileText className="mt-0.5 size-5 shrink-0 text-primary" />
-              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â· {formatMaterialStatus(material.status)}</span></span>
+              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} · {formatMaterialStatus(material.status)}</span></span>
               {selected && <CheckCircle2 className="size-5 shrink-0 text-primary" />}
             </button>;
           })}
@@ -707,8 +795,38 @@ function SummaryTab({
       {loading ? <Skeleton className="h-48 rounded-2xl" /> : summaries.length === 0 ? (
         <Card className="rounded-2xl border-dashed p-10 text-center shadow-soft"><Sparkles className="mx-auto size-8 text-primary" /><h3 className="mt-3 font-semibold">No summaries yet</h3><p className="mt-1 text-sm text-muted-foreground">Select lecture materials and generate your first study summary.</p></Card>
       ) : <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <Card className="rounded-2xl border-border p-3 shadow-soft"><p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous summaries</p><div className="space-y-1">{summaries.map((summary) => <button type="button" key={summary.id} onClick={() => setActiveSummary(summary)} className={cn("w-full rounded-xl p-3 text-left text-sm transition", activeSummary?.id === summary.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted")}><span className="block truncate">{summary.title}</span><span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(summary.createdAt)}</span></button>)}</div></Card>
-        {activeSummary && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeSummary.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeSummary.materialIds.length} lecture(s) Â· {formatUploadDate(activeSummary.createdAt)}</p><div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{activeSummary.content}</div></Card>}
+        <Card className="rounded-2xl border-border p-3 shadow-soft">
+          <p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous summaries</p>
+          <div className="space-y-1">
+            {summaries.map((summary) => (
+              <div
+                key={summary.id}
+                className={cn(
+                  "group flex items-center justify-between gap-1 rounded-xl pr-1 text-sm transition",
+                  activeSummary?.id === summary.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveSummary(summary)}
+                  className="min-w-0 flex-1 p-3 text-left"
+                >
+                  <span className="block truncate">{summary.title}</span>
+                  <span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(summary.createdAt)}</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Delete ${summary.title}`}
+                  onClick={(e) => handleDelete(e, summary.id)}
+                  className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
+        {activeSummary && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeSummary.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeSummary.materialIds.length} lecture(s) · {formatUploadDate(activeSummary.createdAt)}</p><div className="mt-5 text-sm leading-7 text-foreground"><MarkdownContent content={activeSummary.content} /></div></Card>}
       </div>}
     </div>
   );
@@ -725,6 +843,7 @@ function NotesTab({
   selectedMaterialIds: number[];
   onSelectMaterials: (ids: number[]) => void;
 }) {
+  const { token } = useAuth();
   const [notes, setNotes] = useState<GeneratedSmartNote[]>([]);
   const [activeNote, setActiveNote] = useState<GeneratedSmartNote | null>(null);
   const [loading, setLoading] = useState(true);
@@ -732,10 +851,21 @@ function NotesTab({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    getSmartNotes().then((loaded) => { setNotes(loaded); setActiveNote(loaded[0] ?? null); })
+    if (!token) {
+      setNotes([]);
+      setActiveNote(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    getSmartNotes()
+      .then((loaded) => {
+        setNotes(loaded);
+        setActiveNote(loaded[0] ?? null);
+      })
       .catch((error) => toast.error("Could not load smart notes", { description: axiosErrorMessage(error) }))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   const toggleMaterial = (id: number) => onSelectMaterials(selectedMaterialIds.includes(id)
     ? selectedMaterialIds.filter((selectedId) => selectedId !== id)
@@ -755,23 +885,82 @@ function NotesTab({
     } finally { setGenerating(false); }
   };
 
-  return <div className="space-y-4">
-    <Card className="rounded-2xl border-border p-5 shadow-soft">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="font-semibold">Lecture materials</h2><p className="text-sm text-muted-foreground">Choose one or more ready lectures for concise revision notes.</p></div>
-        <Button onClick={handleGenerate} disabled={generating || !selectedMaterialIds.length}>{generating ? <Loader2 className="size-4 animate-spin" /> : <NotebookPen className="size-4" />}{generating ? "Generating..." : "Generate Notes"}</Button>
-      </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">{materials.length === 0 ? <p className="text-sm text-muted-foreground">Upload a lecture to begin.</p> : materials.map((material) => {
-        const selected = selectedMaterialIds.includes(material.id); const ready = material.status === "READY";
-        return <button type="button" key={material.id} disabled={!ready} onClick={() => toggleMaterial(material.id)} className={cn("flex items-start gap-3 rounded-xl border p-4 text-left transition", selected ? "border-primary bg-primary-soft/60" : "border-border bg-white hover:border-primary/50", !ready && "cursor-not-allowed opacity-50")}><FileText className="mt-0.5 size-5 shrink-0 text-primary" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â· {formatMaterialStatus(material.status)}</span></span>{selected && <CheckCircle2 className="size-5 shrink-0 text-primary" />}</button>;
-      })}</div>
-      <p className="mt-3 text-xs text-muted-foreground">Selected: {selectedMaterialIds.length} lecture(s)</p>
-    </Card>
-    {loading ? <Skeleton className="h-48 rounded-2xl" /> : !notes.length ? <Card className="rounded-2xl border-dashed p-10 text-center shadow-soft"><NotebookPen className="mx-auto size-8 text-primary" /><h3 className="mt-3 font-semibold">No smart notes yet</h3><p className="mt-1 text-sm text-muted-foreground">Select lecture materials and generate your first revision notes.</p></Card> : <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <Card className="rounded-2xl border-border p-3 shadow-soft"><p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous notes</p>{notes.map((note) => <button type="button" key={note.id} onClick={() => setActiveNote(note)} className={cn("mt-1 w-full rounded-xl p-3 text-left text-sm transition", activeNote?.id === note.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted")}><span className="block truncate">{note.title}</span><span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(note.createdAt)}</span></button>)}</Card>
-{activeNote && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeNote.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeNote.materialIds.length} lecture(s) Â· {formatUploadDate(activeNote.createdAt)}</p><div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{activeNote.content}</div></Card>}
-    </div>}
-  </div>;
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    try {
+      await deleteSmartNote(id);
+      setNotes((current) => {
+        const next = current.filter((n) => n.id !== id);
+        if (activeNote?.id === id) {
+          setActiveNote(next[0] ?? null);
+        }
+        return next;
+      });
+      toast.success("Smart note deleted");
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (error) {
+      toast.error("Could not delete smart note", { description: axiosErrorMessage(error) });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="rounded-2xl border-border p-5 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="font-semibold">Lecture materials</h2><p className="text-sm text-muted-foreground">Choose one or more ready lectures for concise revision notes.</p></div>
+          <Button onClick={handleGenerate} disabled={generating || !selectedMaterialIds.length}>
+            {generating ? <Loader2 className="size-4 animate-spin" /> : <NotebookPen className="size-4" />}
+            {generating ? "Generating..." : "Generate Notes"}
+          </Button>
+        </div>
+        <div className="mt-4 grid max-h-[280px] gap-3 overflow-y-auto pr-1 md:grid-cols-2">
+          {materials.length === 0 ? <p className="text-sm text-muted-foreground">Upload a lecture to begin.</p> : materials.map((material) => {
+            const selected = selectedMaterialIds.includes(material.id); const ready = material.status === "READY";
+            return <button type="button" key={material.id} disabled={!ready} onClick={() => toggleMaterial(material.id)} className={cn("flex items-start gap-3 rounded-xl border p-4 text-left transition", selected ? "border-primary bg-primary-soft/60" : "border-border bg-white hover:border-primary/50", !ready && "cursor-not-allowed opacity-50")}><FileText className="mt-0.5 size-5 shrink-0 text-primary" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{material.fileName}</span><span className="mt-1 block text-xs text-muted-foreground">{material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} · {formatMaterialStatus(material.status)}</span></span>{selected && <CheckCircle2 className="size-5 shrink-0 text-primary" />}</button>;
+          })}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Selected: {selectedMaterialIds.length} lecture(s)</p>
+      </Card>
+      {loading ? <Skeleton className="h-48 rounded-2xl" /> : !notes.length ? (
+        <Card className="rounded-2xl border-dashed p-10 text-center shadow-soft"><NotebookPen className="mx-auto size-8 text-primary" /><h3 className="mt-3 font-semibold">No smart notes yet</h3><p className="mt-1 text-sm text-muted-foreground">Select lecture materials and generate your first revision notes.</p></Card>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <Card className="rounded-2xl border-border p-3 shadow-soft">
+            <p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous notes</p>
+            <div className="space-y-1">
+              {notes.map((note) => (
+                <div
+                  key={note.id}
+                  className={cn(
+                    "group flex items-center justify-between gap-1 rounded-xl pr-1 text-sm transition",
+                    activeNote?.id === note.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveNote(note)}
+                    className="min-w-0 flex-1 p-3 text-left"
+                  >
+                    <span className="block truncate">{note.title}</span>
+                    <span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(note.createdAt)}</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${note.title}`}
+                    onClick={(e) => handleDelete(e, note.id)}
+                    className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </Card>
+          {activeNote && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeNote.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeNote.materialIds.length} lecture(s) · {formatUploadDate(activeNote.createdAt)}</p><div className="mt-5 text-sm leading-7 text-foreground"><MarkdownContent content={activeNote.content} /></div></Card>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* --------------------------------- Flashcards ------------------------------ */
@@ -787,6 +976,7 @@ function FlashcardsTab({
   selectedMaterialIds: number[];
   onSelectMaterials: (ids: number[]) => void;
 }) {
+  const { token } = useAuth();
   const [decks, setDecks] = useState<FlashcardDeck[]>([]);
   const [activeDeck, setActiveDeck] = useState<FlashcardDeckDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -799,7 +989,14 @@ function FlashcardsTab({
   const refreshDashboard = () => void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
   useEffect(() => {
+    if (!token) {
+      setDecks([]);
+      setActiveDeck(null);
+      setLoading(false);
+      return;
+    }
     let active = true;
+    setLoading(true);
     getFlashcardDecks()
       .then(async (loadedDecks) => {
         if (!active) return;
@@ -822,7 +1019,7 @@ function FlashcardsTab({
     return () => {
       active = false;
     };
-  }, []);
+  }, [token]);
 
   const toggleMaterial = (id: number) =>
     onSelectMaterials(
@@ -954,7 +1151,7 @@ function FlashcardsTab({
             {generating ? "Generating..." : "Generate Flashcards"}
           </Button>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid max-h-[280px] gap-3 overflow-y-auto pr-1 md:grid-cols-2">
           {materials.length === 0 ? (
             <p className="text-sm text-muted-foreground">Upload a lecture to begin.</p>
           ) : (
@@ -981,7 +1178,7 @@ function FlashcardsTab({
                       {material.fileName}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
-                      {material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â·{" "}
+                      {material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} ·{" "}
                       {formatMaterialStatus(material.status)}
                     </span>
                   </span>
@@ -1036,7 +1233,7 @@ function FlashcardsTab({
                   >
                     <span className="block truncate text-sm font-semibold">{deck.title}</span>
                     <span className="mt-1 block truncate text-xs text-muted-foreground">
-                      {deck.cardCount} cards Â· {formatTimestamp(deck.createdAt)}
+                      {deck.cardCount} cards · {formatTimestamp(deck.createdAt)}
                     </span>
                     <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                       {deckLectureTitles(deck)}
@@ -1173,6 +1370,7 @@ function QuizTab({
   selectedMaterialIds: number[];
   onSelectMaterials: (ids: number[]) => void;
 }) {
+  const { token } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [activeQuiz, setActiveQuiz] = useState<QuizDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1192,7 +1390,14 @@ function QuizTab({
   const refreshDashboard = () => void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
   useEffect(() => {
+    if (!token) {
+      setQuizzes([]);
+      setActiveQuiz(null);
+      setLoading(false);
+      return;
+    }
     let active = true;
+    setLoading(true);
     getQuizzes()
       .then((loaded) => {
         if (!active) return;
@@ -1207,7 +1412,7 @@ function QuizTab({
     return () => {
       active = false;
     };
-  }, []);
+  }, [token]);
 
   const toggleMaterial = (id: number) =>
     onSelectMaterials(
@@ -1355,7 +1560,7 @@ function QuizTab({
             {generating ? "Generating..." : "Generate Quiz"}
           </Button>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid max-h-[280px] gap-3 overflow-y-auto pr-1 md:grid-cols-2">
           {materials.length === 0 ? (
             <p className="text-sm text-muted-foreground">Upload a lecture to begin.</p>
           ) : (
@@ -1382,7 +1587,7 @@ function QuizTab({
                       {material.fileName}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
-                      {material.fileType} Â· Uploaded {formatUploadDate(material.uploadedAt)} Â·{" "}
+                      {material.fileType} · Uploaded {formatUploadDate(material.uploadedAt)} ·{" "}
                       {formatMaterialStatus(material.status)}
                     </span>
                   </span>
@@ -1446,7 +1651,7 @@ function QuizTab({
                   >
                     <span className="block truncate text-sm font-semibold">{quiz.title}</span>
                     <span className="mt-1 block truncate text-xs text-muted-foreground">
-                      {quiz.questionCount} questions Â· {formatTimestamp(quiz.createdAt)}
+                      {quiz.questionCount} questions · {formatTimestamp(quiz.createdAt)}
                     </span>
                     <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                       {quizMaterialsTitle(quiz)}
@@ -1544,9 +1749,9 @@ function QuizTab({
                       <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                         Explanation
                       </p>
-                      <p className="mt-1.5 text-sm text-muted-foreground">
-                        {currentQuestion.explanation}
-                      </p>
+                      <div className="mt-1.5 text-sm text-muted-foreground">
+                        <MarkdownContent content={currentQuestion.explanation} />
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -1628,7 +1833,7 @@ function QuizTab({
                     <p className="mt-1 text-xs text-muted-foreground">
                       Correct answer: {item.correctOption}
                     </p>
-                    <p className="mt-2 text-xs text-muted-foreground">{item.explanation}</p>
+                    <div className="mt-2 text-xs text-muted-foreground"><MarkdownContent content={item.explanation} /></div>
                   </div>
                 ))}
               </div>
@@ -1637,7 +1842,7 @@ function QuizTab({
             <Card className="gap-0 rounded-2xl border-border p-6 shadow-soft">
               <h2 className="text-lg font-semibold">{activeQuiz.quiz.title}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {activeQuiz.quiz.questionCount} questions Â· {quizMaterialsTitle(activeQuiz.quiz)} Â·
+                {activeQuiz.quiz.questionCount} questions · {quizMaterialsTitle(activeQuiz.quiz)} ·
                 Created {formatTimestamp(activeQuiz.quiz.createdAt)}
               </p>
               {lastAttempt && (

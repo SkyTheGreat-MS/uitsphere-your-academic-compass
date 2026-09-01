@@ -1,5 +1,6 @@
 package backend.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -50,6 +52,9 @@ public class ChatSession {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessage> messages = new ArrayList<>();
+
     @PrePersist
     void prePersist() {
         LocalDateTime now = LocalDateTime.now();
@@ -70,6 +75,10 @@ public class ChatSession {
     public List<LearningMaterial> getLearningMaterials() { return learningMaterials; }
     public void setLearningMaterials(List<LearningMaterial> learningMaterials) {
         this.learningMaterials = learningMaterials == null ? new ArrayList<>() : new ArrayList<>(learningMaterials);
+    }
+    public List<ChatMessage> getMessages() { return messages; }
+    public void setMessages(List<ChatMessage> messages) {
+        this.messages = messages == null ? new ArrayList<>() : new ArrayList<>(messages);
     }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

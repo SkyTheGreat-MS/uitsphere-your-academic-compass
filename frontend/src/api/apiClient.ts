@@ -12,11 +12,25 @@ apiClient.interceptors.request.use((config) => {
 
   if (isPublicAuthRequest) {
     delete config.headers.Authorization;
-  } else if (token) {
+  } else if (token && token.trim() !== "" && token !== "null" && token !== "undefined") {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
   }
 
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("student");
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
+    return Promise.reject(error);
+  },
+);
 
 export default apiClient;

@@ -40,3 +40,4 @@ replay_pid*.log
 .png
 .jpg
 .jpeg
+/uploads/

@@ -8,8 +8,10 @@ import backend.service.SummaryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,9 +39,23 @@ public class SummaryController {
         return summaryService.list();
     }
 
+    @GetMapping("/{id}")
+    public SummaryResponse get(@PathVariable Long id) {
+        return summaryService.get(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        summaryService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @ExceptionHandler(LearningMaterialException.class)
     public ResponseEntity<ErrorResponse> handleMaterialError(LearningMaterialException ex) {
-        return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage()));
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(GroqServiceException.class)

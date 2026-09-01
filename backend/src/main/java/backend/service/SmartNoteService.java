@@ -47,8 +47,26 @@ public class SmartNoteService {
         return repository.findByStudentOrderByUpdatedAtDesc(currentStudent()).stream().map(SmartNoteResponse::from).toList();
     }
 
+    public SmartNoteResponse get(Long id) {
+        Student student = currentStudent();
+        SmartNote note = repository.findByIdAndStudent(id, student)
+                .orElseThrow(() -> new LearningMaterialException("Smart note not found."));
+        return SmartNoteResponse.from(note);
+    }
+
+    public void delete(Long id) {
+        Student student = currentStudent();
+        SmartNote note = repository.findByIdAndStudent(id, student)
+                .orElseThrow(() -> new LearningMaterialException("Smart note not found."));
+        repository.delete(note);
+    }
+
     private Student currentStudent() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equals(auth.getName())) {
+            throw new LearningMaterialException("User is not authenticated.");
+        }
+        String email = auth.getName();
         return studentRepository.findByEmail(email).orElseThrow(() -> new LearningMaterialException("Authenticated student not found."));
     }
 }

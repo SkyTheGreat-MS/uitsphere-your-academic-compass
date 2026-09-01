@@ -84,6 +84,17 @@ public class ChatService {
                 .toList();
     }
 
+    public ChatSessionResponse getSession(Long sessionId) {
+        ChatSession session = ownedSession(sessionId);
+        return ChatSessionResponse.from(session);
+    }
+
+    @Transactional
+    public void deleteSession(Long sessionId) {
+        ChatSession session = ownedSession(sessionId);
+        sessionRepository.delete(session);
+    }
+
     @Transactional
     public ChatMessageResponse sendMessage(ChatMessageRequest request) {
         ChatSession session = ownedSession(request.sessionId());
@@ -173,7 +184,11 @@ public class ChatService {
     }
 
     private Student currentStudent() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equals(auth.getName())) {
+            throw new ChatException("User is not authenticated.");
+        }
+        String email = auth.getName();
         return studentRepository.findByEmail(email)
                 .orElseThrow(() -> new ChatException("Authenticated student not found."));
     }

@@ -42,6 +42,17 @@ public class ChatController {
         return chatService.listSessions();
     }
 
+    @GetMapping("/sessions/{id}")
+    public ChatSessionResponse getSession(@PathVariable Long id) {
+        return chatService.getSession(id);
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/sessions/{id}")
+    public ResponseEntity<Void> deleteSession(@PathVariable Long id) {
+        chatService.deleteSession(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/sessions/{id}/messages")
     public List<ChatMessageResponse> listMessages(@PathVariable Long id) {
         return chatService.listMessages(id);
@@ -54,12 +65,18 @@ public class ChatController {
 
     @ExceptionHandler(ChatException.class)
     public ResponseEntity<ErrorResponse> handleChatError(ChatException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage()));
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(LearningMaterialException.class)
     public ResponseEntity<ErrorResponse> handleMaterialError(LearningMaterialException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage()));
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(GroqServiceException.class)

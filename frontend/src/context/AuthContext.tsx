@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getStudent } from "@/api/studentApi";
 
@@ -26,6 +27,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [student, setStudent] = useState<Student | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     localStorage.removeItem("student");
     localStorage.removeItem("token");
+    queryClient.clear();
   };
 
   useEffect(() => {
@@ -60,8 +63,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "token") {
+        const savedToken = localStorage.getItem("token");
+        if (savedToken !== token) {
+          queryClient.clear();
+          if (!savedToken) {
+            setStudent(null);
+            setToken(null);
+            localStorage.removeItem("student");
+          } else {
+            setToken(savedToken);
+            getStudent()
+              .then((currentStudent) => {
+                setStudent(currentStudent);
+                localStorage.setItem("student", JSON.stringify(currentStudent));
+              })
+              .catch(() => clearSession());
+          }
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    const handleUnauthorized = () => {
+      clearSession();
+    };
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    };
+  }, [token, queryClient]);
+
   const login = async (nextToken: string) => {
     setIsLoading(true);
+    queryClient.clear();
     setToken(nextToken);
     localStorage.setItem("token", nextToken);
 

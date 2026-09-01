@@ -37,6 +37,11 @@ public class LearningMaterialController {
         return materialService.getMaterials();
     }
 
+    @GetMapping("/{id}")
+    public LearningMaterialResponse getMaterial(@PathVariable Long id) {
+        return materialService.getMaterial(id);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         materialService.delete(id);
@@ -45,7 +50,10 @@ public class LearningMaterialController {
 
     @ExceptionHandler(LearningMaterialException.class)
     public ResponseEntity<ErrorResponse> handleMaterialError(LearningMaterialException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status)
                 .body(new ErrorResponse(ex.getMessage()));
     }
 

@@ -130,7 +130,7 @@ public class FlashcardService {
         Student student = currentStudent();
         Flashcard flashcard = flashcardRepository.findById(flashcardId)
                 .orElseThrow(() -> new LearningMaterialException("Flashcard not found."));
-        if (flashcard.getDeck().getStudent().getId() != student.getId()) {
+        if (!flashcard.getDeck().getStudent().getId().equals(student.getId())) {
             throw new LearningMaterialException("Flashcard not found.");
         }
 
@@ -151,7 +151,11 @@ public class FlashcardService {
     }
 
     private Student currentStudent() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equals(auth.getName())) {
+            throw new LearningMaterialException("User is not authenticated.");
+        }
+        String email = auth.getName();
         return studentRepository.findByEmail(email)
                 .orElseThrow(() -> new LearningMaterialException("Authenticated student not found."));
     }

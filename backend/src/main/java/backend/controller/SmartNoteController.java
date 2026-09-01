@@ -18,7 +18,15 @@ public class SmartNoteController {
     public SmartNoteController(SmartNoteService service) { this.service = service; }
     @PostMapping("/generate") public SmartNoteResponse generate(@Valid @RequestBody SmartNoteGenerateRequest request) { return service.generate(request); }
     @GetMapping public List<SmartNoteResponse> list() { return service.list(); }
-    @ExceptionHandler(LearningMaterialException.class) public ResponseEntity<ErrorResponse> materialError(LearningMaterialException ex) { return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage())); }
+    @GetMapping("/{id}") public SmartNoteResponse get(@PathVariable Long id) { return service.get(id); }
+    @DeleteMapping("/{id}") public ResponseEntity<Void> delete(@PathVariable Long id) { service.delete(id); return ResponseEntity.noContent().build(); }
+    @ExceptionHandler(LearningMaterialException.class)
+    public ResponseEntity<ErrorResponse> materialError(LearningMaterialException ex) {
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage()));
+    }
     @ExceptionHandler(GroqServiceException.class) public ResponseEntity<ErrorResponse> groqError(GroqServiceException ex) { return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(ex.getMessage())); }
     public record ErrorResponse(String error) { }
 }

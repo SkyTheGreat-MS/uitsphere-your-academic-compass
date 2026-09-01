@@ -7,6 +7,7 @@ import backend.entity.LearningMaterialStatus;
 import backend.entity.Student;
 import backend.repository.LearningMaterialRepository;
 import backend.repository.StudentRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class LearningMaterialService {
     private final StudentRepository studentRepository;
     private final DocumentProcessingService documentProcessingService;
     private final NotificationService notificationService;
+    private final JdbcTemplate jdbcTemplate;
     private final Path storageRoot;
 
     public LearningMaterialService(
@@ -37,11 +39,13 @@ public class LearningMaterialService {
             StudentRepository studentRepository,
             DocumentProcessingService documentProcessingService,
             NotificationService notificationService,
+            JdbcTemplate jdbcTemplate,
             @Value("${file.upload-dir:uploads}") String storagePath) {
         this.materialRepository = materialRepository;
         this.studentRepository = studentRepository;
         this.documentProcessingService = documentProcessingService;
         this.notificationService = notificationService;
+        this.jdbcTemplate = jdbcTemplate;
         this.storageRoot = Path.of(storagePath).toAbsolutePath().normalize();
     }
 
@@ -124,6 +128,13 @@ public class LearningMaterialService {
                 .toList();
     }
 
+    public LearningMaterialResponse getMaterial(Long id) {
+        Student student = currentStudent();
+        LearningMaterial material = materialRepository.findByIdAndStudent(id, student)
+                .orElseThrow(() -> new LearningMaterialException("Learning material not found."));
+        return LearningMaterialResponse.from(material);
+    }
+
     public void delete(Long id) {
         Student student = currentStudent();
         LearningMaterial material = materialRepository.findByIdAndStudent(id, student)
@@ -140,11 +151,27 @@ public class LearningMaterialService {
         } catch (IOException ex) {
             throw new LearningMaterialException("Could not delete the stored file.", ex);
         }
+
+        try {
+            jdbcTemplate.update("UPDATE chat_sessions SET learning_material_id = NULL WHERE learning_material_id = ?", id);
+            jdbcTemplate.update("DELETE FROM chat_session_materials WHERE material_id = ?", id);
+            jdbcTemplate.update("DELETE FROM summary_material_ids WHERE material_id = ?", id);
+            jdbcTemplate.update("DELETE FROM smart_note_material_ids WHERE material_id = ?", id);
+            jdbcTemplate.update("DELETE FROM flashcard_deck_material_ids WHERE material_id = ?", id);
+            jdbcTemplate.update("DELETE FROM quiz_material_ids WHERE material_id = ?", id);
+        } catch (Exception e) {
+            log.warn("Could not clean up references for material {}: {}", id, e.getMessage());
+        }
+
         materialRepository.delete(material);
     }
 
     private Student currentStudent() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equals(auth.getName())) {
+            throw new LearningMaterialException("User is not authenticated.");
+        }
+        String email = auth.getName();
         return studentRepository.findByEmail(email)
                 .orElseThrow(() -> new LearningMaterialException("Authenticated student not found."));
     }

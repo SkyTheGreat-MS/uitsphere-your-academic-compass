@@ -40,3 +40,7 @@ export async function sendChatMessage(sessionId: number, message: string, materi
   });
   return response.data;
 }
+
+export async function deleteChatSession(sessionId: number) {
+  await apiClient.delete(`/api/chat/sessions/${sessionId}`);
+}
