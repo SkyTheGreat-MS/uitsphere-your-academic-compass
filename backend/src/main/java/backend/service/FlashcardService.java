@@ -12,6 +12,7 @@ import backend.entity.Student;
 import backend.repository.FlashcardDeckRepository;
 import backend.repository.FlashcardProgressRepository;
 import backend.repository.FlashcardRepository;
+import backend.repository.LearningMaterialRepository;
 import backend.repository.StudentRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class FlashcardService {
     private final FlashcardRepository flashcardRepository;
     private final FlashcardProgressRepository progressRepository;
     private final StudentRepository studentRepository;
+    private final LearningMaterialRepository materialRepository;
     private final AIContentGenerationService generationService;
     private final FlashcardResponseParser responseParser;
     private final StudyStreakService studyStreakService;
@@ -40,6 +42,7 @@ public class FlashcardService {
             FlashcardRepository flashcardRepository,
             FlashcardProgressRepository progressRepository,
             StudentRepository studentRepository,
+            LearningMaterialRepository materialRepository,
             AIContentGenerationService generationService,
             FlashcardResponseParser responseParser, StudyStreakService studyStreakService,
             NotificationService notificationService) {
@@ -47,6 +50,7 @@ public class FlashcardService {
         this.flashcardRepository = flashcardRepository;
         this.progressRepository = progressRepository;
         this.studentRepository = studentRepository;
+        this.materialRepository = materialRepository;
         this.generationService = generationService;
         this.responseParser = responseParser;
         this.studyStreakService = studyStreakService;
@@ -61,9 +65,12 @@ public class FlashcardService {
         String rawContent = generationService.generateFlashcards(materialIds);
         List<FlashcardResponseParser.ParsedFlashcard> parsed = responseParser.parse(rawContent);
 
+        List<backend.entity.LearningMaterial> materials = materialRepository.findByIdInAndStudent(materialIds, student);
+        String title = LectureTitleUtil.formatTitleFromMaterials(materialIds, materials, "Lecture flashcards");
+
         FlashcardDeck deck = new FlashcardDeck();
         deck.setStudent(student);
-        deck.setTitle(materialIds.size() == 1 ? "Lecture flashcards" : "Combined lecture flashcards");
+        deck.setTitle(title);
         deck.setMaterialIds(materialIds);
         deck = deckRepository.save(deck);
 

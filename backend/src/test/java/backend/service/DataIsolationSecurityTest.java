@@ -154,7 +154,7 @@ class DataIsolationSecurityTest {
         when(summaryRepository.findByIdAndStudent(300L, studentB)).thenReturn(Optional.empty());
 
         SummaryService service = new SummaryService(
-                summaryRepository, studentRepository, generationService, notificationService);
+                summaryRepository, studentRepository, materialRepository, generationService, notificationService);
 
         assertThatThrownBy(() -> service.get(300L))
                 .isInstanceOf(LearningMaterialException.class)
@@ -173,7 +173,7 @@ class DataIsolationSecurityTest {
         when(smartNoteRepository.findByIdAndStudent(400L, studentB)).thenReturn(Optional.empty());
 
         SmartNoteService service = new SmartNoteService(
-                smartNoteRepository, studentRepository, generationService, notificationService);
+                smartNoteRepository, studentRepository, materialRepository, generationService, notificationService);
 
         assertThatThrownBy(() -> service.get(400L))
                 .isInstanceOf(LearningMaterialException.class)
@@ -193,7 +193,7 @@ class DataIsolationSecurityTest {
 
         FlashcardService service = new FlashcardService(
                 flashcardDeckRepository, flashcardRepository, flashcardProgressRepository,
-                studentRepository, generationService, flashcardResponseParser,
+                studentRepository, materialRepository, generationService, flashcardResponseParser,
                 studyStreakService, notificationService);
 
         assertThatThrownBy(() -> service.getDeck(500L))
@@ -222,7 +222,7 @@ class DataIsolationSecurityTest {
 
         FlashcardService service = new FlashcardService(
                 flashcardDeckRepository, flashcardRepository, flashcardProgressRepository,
-                studentRepository, generationService, flashcardResponseParser,
+                studentRepository, materialRepository, generationService, flashcardResponseParser,
                 studyStreakService, notificationService);
 
         assertThatThrownBy(() -> service.markLearned(555L, true))
@@ -239,7 +239,7 @@ class DataIsolationSecurityTest {
 
         QuizService service = new QuizService(
                 quizRepository, quizQuestionRepository, quizAttemptRepository, quizAnswerRepository,
-                studentRepository, generationService, quizResponseParser,
+                studentRepository, materialRepository, generationService, quizResponseParser,
                 studyStreakService, notificationService);
 
         assertThatThrownBy(() -> service.getQuiz(600L))

@@ -2,8 +2,10 @@ package backend.service;
 
 import backend.dto.SummaryGenerateRequest;
 import backend.dto.SummaryResponse;
+import backend.entity.LearningMaterial;
 import backend.entity.Student;
 import backend.entity.Summary;
+import backend.repository.LearningMaterialRepository;
 import backend.repository.SummaryRepository;
 import backend.repository.StudentRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,16 +18,19 @@ public class SummaryService {
 
     private final SummaryRepository summaryRepository;
     private final StudentRepository studentRepository;
+    private final LearningMaterialRepository materialRepository;
     private final AIContentGenerationService generationService;
     private final NotificationService notificationService;
 
     public SummaryService(
             SummaryRepository summaryRepository,
             StudentRepository studentRepository,
+            LearningMaterialRepository materialRepository,
             AIContentGenerationService generationService,
             NotificationService notificationService) {
         this.summaryRepository = summaryRepository;
         this.studentRepository = studentRepository;
+        this.materialRepository = materialRepository;
         this.generationService = generationService;
         this.notificationService = notificationService;
     }
@@ -35,9 +40,12 @@ public class SummaryService {
         List<Long> materialIds = request.materialIds().stream().distinct().toList();
         String content = generationService.generateSummary(materialIds);
 
+        List<LearningMaterial> materials = materialRepository.findByIdInAndStudent(materialIds, student);
+        String title = LectureTitleUtil.formatTitleFromMaterials(materialIds, materials, "Lecture summary");
+
         Summary summary = new Summary();
         summary.setStudent(student);
-        summary.setTitle(materialIds.size() == 1 ? "Lecture summary" : "Combined lecture summary");
+        summary.setTitle(title);
         summary.setContent(content);
         summary.setMaterialIds(materialIds);
         Summary saved = summaryRepository.save(summary);
@@ -45,7 +53,7 @@ public class SummaryService {
                 student,
                 "summary",
                 "Summary generated",
-                "A summary for your lecture is ready to review.",
+                "\"" + title + "\" summary is ready to review.",
                 "/studio");
         return SummaryResponse.from(saved);
     }

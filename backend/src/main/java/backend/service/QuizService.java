@@ -15,6 +15,7 @@ import backend.entity.QuizAttempt;
 import backend.entity.QuizCorrectOption;
 import backend.entity.QuizQuestion;
 import backend.entity.Student;
+import backend.repository.LearningMaterialRepository;
 import backend.repository.QuizAnswerRepository;
 import backend.repository.QuizAttemptRepository;
 import backend.repository.QuizQuestionRepository;
@@ -38,6 +39,7 @@ public class QuizService {
     private final QuizAttemptRepository attemptRepository;
     private final QuizAnswerRepository answerRepository;
     private final StudentRepository studentRepository;
+    private final LearningMaterialRepository materialRepository;
     private final AIContentGenerationService generationService;
     private final QuizResponseParser responseParser;
     private final StudyStreakService studyStreakService;
@@ -49,6 +51,7 @@ public class QuizService {
             QuizAttemptRepository attemptRepository,
             QuizAnswerRepository answerRepository,
             StudentRepository studentRepository,
+            LearningMaterialRepository materialRepository,
             AIContentGenerationService generationService,
             QuizResponseParser responseParser, StudyStreakService studyStreakService,
             NotificationService notificationService) {
@@ -57,6 +60,7 @@ public class QuizService {
         this.attemptRepository = attemptRepository;
         this.answerRepository = answerRepository;
         this.studentRepository = studentRepository;
+        this.materialRepository = materialRepository;
         this.generationService = generationService;
         this.responseParser = responseParser;
         this.studyStreakService = studyStreakService;
@@ -72,9 +76,12 @@ public class QuizService {
         String rawContent = generationService.generateQuiz(materialIds, questionCount);
         List<QuizResponseParser.ParsedQuestion> parsed = responseParser.parse(rawContent, questionCount);
 
+        List<backend.entity.LearningMaterial> materials = materialRepository.findByIdInAndStudent(materialIds, student);
+        String title = LectureTitleUtil.formatTitleFromMaterials(materialIds, materials, "Lecture quiz");
+
         Quiz quiz = new Quiz();
         quiz.setStudent(student);
-        quiz.setTitle(materialIds.size() == 1 ? "Lecture quiz" : "Combined lecture quiz");
+        quiz.setTitle(title);
         quiz.setMaterialIds(materialIds);
         quiz = quizRepository.save(quiz);
 
@@ -94,6 +101,13 @@ public class QuizService {
             question.setOrderIndex(orderIndex++);
             savedQuestions.add(questionRepository.save(question));
         }
+
+        notificationService.notify(
+                student,
+                "quiz",
+                "Quiz generated",
+                "\"" + title + "\" quiz is ready to take.",
+                "/studio");
 
         return QuizDetailResponse.from(quiz, savedQuestions);
     }

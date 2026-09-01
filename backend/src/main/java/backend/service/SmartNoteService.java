@@ -2,8 +2,10 @@ package backend.service;
 
 import backend.dto.SmartNoteGenerateRequest;
 import backend.dto.SmartNoteResponse;
+import backend.entity.LearningMaterial;
 import backend.entity.SmartNote;
 import backend.entity.Student;
+import backend.repository.LearningMaterialRepository;
 import backend.repository.SmartNoteRepository;
 import backend.repository.StudentRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,13 +16,16 @@ import java.util.List;
 public class SmartNoteService {
     private final SmartNoteRepository repository;
     private final StudentRepository studentRepository;
+    private final LearningMaterialRepository materialRepository;
     private final AIContentGenerationService generationService;
     private final NotificationService notificationService;
 
     public SmartNoteService(SmartNoteRepository repository, StudentRepository studentRepository,
+            LearningMaterialRepository materialRepository,
             AIContentGenerationService generationService, NotificationService notificationService) {
         this.repository = repository;
         this.studentRepository = studentRepository;
+        this.materialRepository = materialRepository;
         this.generationService = generationService;
         this.notificationService = notificationService;
     }
@@ -28,9 +33,12 @@ public class SmartNoteService {
     public SmartNoteResponse generate(SmartNoteGenerateRequest request) {
         Student student = currentStudent();
         List<Long> materialIds = request.materialIds().stream().distinct().toList();
+        List<LearningMaterial> materials = materialRepository.findByIdInAndStudent(materialIds, student);
+        String title = LectureTitleUtil.formatTitleFromMaterials(materialIds, materials, "Lecture smart notes");
+
         SmartNote note = new SmartNote();
         note.setStudent(student);
-        note.setTitle(materialIds.size() == 1 ? "Lecture smart notes" : "Combined lecture smart notes");
+        note.setTitle(title);
         note.setContent(generationService.generateSmartNotes(materialIds));
         note.setMaterialIds(materialIds);
         SmartNoteResponse response = SmartNoteResponse.from(repository.save(note));
@@ -38,7 +46,7 @@ public class SmartNoteService {
                 student,
                 "notes",
                 "Smart notes generated",
-                "Smart notes for your lecture are ready to review.",
+                "\"" + title + "\" smart notes are ready to review.",
                 "/studio");
         return response;
     }

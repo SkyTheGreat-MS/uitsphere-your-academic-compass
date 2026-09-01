@@ -24,7 +24,8 @@ import {
   MessageSquarePlus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { formatTime12 } from "@/lib/date";
+import { formatDateTime12, formatTime12 } from "@/lib/date";
+import { getLectureTitle } from "@/lib/studio";
 import {
   createChatSession,
   deleteChatSession,
@@ -801,35 +802,52 @@ function SummaryTab({
         <Card className="rounded-2xl border-border p-3 shadow-soft">
           <p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous summaries</p>
           <div className="space-y-1">
-            {summaries.map((summary) => (
-              <div
-                key={summary.id}
-                className={cn(
-                  "group flex items-center justify-between gap-1 rounded-xl pr-1 text-sm transition",
-                  activeSummary?.id === summary.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActiveSummary(summary)}
-                  className="min-w-0 flex-1 p-3 text-left"
+            {summaries.map((summary) => {
+              const title = getLectureTitle(summary.materialIds, materials, summary.title);
+              return (
+                <div
+                  key={summary.id}
+                  className={cn(
+                    "group flex items-center justify-between gap-1 rounded-xl pr-1 text-sm transition",
+                    activeSummary?.id === summary.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
+                  )}
                 >
-                  <span className="block truncate">{summary.title}</span>
-                  <span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(summary.createdAt)}</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Delete ${summary.title}`}
-                  onClick={(e) => handleDelete(e, summary.id)}
-                  className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => setActiveSummary(summary)}
+                    className="min-w-0 flex-1 p-3 text-left"
+                  >
+                    <span className="block truncate text-sm font-semibold">{title}</span>
+                    <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                      Summary · {formatDateTime12(summary.createdAt)}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${title}`}
+                    onClick={(e) => handleDelete(e, summary.id)}
+                    className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </Card>
-        {activeSummary && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeSummary.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeSummary.materialIds.length} lecture(s) · {formatUploadDate(activeSummary.createdAt)}</p><div className="mt-5 text-sm leading-7 text-foreground"><MarkdownContent content={activeSummary.content} /></div></Card>}
+        {activeSummary && (
+          <Card className="rounded-2xl border-border p-5 shadow-soft">
+            <h2 className="text-lg font-semibold">
+              {getLectureTitle(activeSummary.materialIds, materials, activeSummary.title)}
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Summary · {activeSummary.materialIds.length} lecture(s) · {formatDateTime12(activeSummary.createdAt)}
+            </p>
+            <div className="mt-5 text-sm leading-7 text-foreground">
+              <MarkdownContent content={activeSummary.content} />
+            </div>
+          </Card>
+        )}
       </div>}
     </div>
   );
@@ -931,35 +949,52 @@ function NotesTab({
           <Card className="rounded-2xl border-border p-3 shadow-soft">
             <p className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Previous notes</p>
             <div className="space-y-1">
-              {notes.map((note) => (
-                <div
-                  key={note.id}
-                  className={cn(
-                    "group flex items-center justify-between gap-1 rounded-xl pr-1 text-sm transition",
-                    activeNote?.id === note.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setActiveNote(note)}
-                    className="min-w-0 flex-1 p-3 text-left"
+              {notes.map((note) => {
+                const title = getLectureTitle(note.materialIds, materials, note.title);
+                return (
+                  <div
+                    key={note.id}
+                    className={cn(
+                      "group flex items-center justify-between gap-1 rounded-xl pr-1 text-sm transition",
+                      activeNote?.id === note.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
+                    )}
                   >
-                    <span className="block truncate">{note.title}</span>
-                    <span className="mt-1 block text-xs font-normal text-muted-foreground">{formatUploadDate(note.createdAt)}</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${note.title}`}
-                    onClick={(e) => handleDelete(e, note.id)}
-                    className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </div>
-              ))}
+                    <button
+                      type="button"
+                      onClick={() => setActiveNote(note)}
+                      className="min-w-0 flex-1 p-3 text-left"
+                    >
+                      <span className="block truncate text-sm font-semibold">{title}</span>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                        Smart Notes · {formatDateTime12(note.createdAt)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${title}`}
+                      onClick={(e) => handleDelete(e, note.id)}
+                      className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </Card>
-          {activeNote && <Card className="rounded-2xl border-border p-5 shadow-soft"><h2 className="text-lg font-semibold">{activeNote.title}</h2><p className="mt-1 text-xs text-muted-foreground">{activeNote.materialIds.length} lecture(s) · {formatUploadDate(activeNote.createdAt)}</p><div className="mt-5 text-sm leading-7 text-foreground"><MarkdownContent content={activeNote.content} /></div></Card>}
+          {activeNote && (
+            <Card className="rounded-2xl border-border p-5 shadow-soft">
+              <h2 className="text-lg font-semibold">
+                {getLectureTitle(activeNote.materialIds, materials, activeNote.title)}
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Smart Notes · {activeNote.materialIds.length} lecture(s) · {formatDateTime12(activeNote.createdAt)}
+              </p>
+              <div className="mt-5 text-sm leading-7 text-foreground">
+                <MarkdownContent content={activeNote.content} />
+              </div>
+            </Card>
+          )}
         </div>
       )}
     </div>
@@ -1112,13 +1147,6 @@ function FlashcardsTab({
   const currentCard = cards.length > 0 ? cards[Math.min(cardIndex, cards.length - 1)] : null;
   const learnedCount = cards.filter((c) => c.learned).length;
 
-  const deckLectureTitles = (deck: FlashcardDeck) => {
-    const names = deck.materialIds
-      .map((id) => materials.find((m) => m.id === id)?.fileName)
-      .filter((name): name is string => Boolean(name));
-    return names.length ? names.join(", ") : `${deck.materialIds.length} lecture(s)`;
-  };
-
   const go = (dir: number) => {
     if (!cards.length) return;
     setFlipped(false);
@@ -1221,42 +1249,42 @@ function FlashcardsTab({
               Previous decks
             </p>
             <div className="space-y-1">
-              {decks.map((deck) => (
-                <div
-                  key={deck.id}
-                  className={cn(
-                    "group flex items-start gap-1 rounded-xl p-1.5 transition-colors",
-                    activeDeck?.deck.id === deck.id ? "bg-primary-soft" : "hover:bg-muted",
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => openDeck(deck.id)}
-                    className="min-w-0 flex-1 rounded-lg p-1.5 text-left"
-                  >
-                    <span className="block truncate text-sm font-semibold">{deck.title}</span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">
-                      {deck.cardCount} cards · {formatTimestamp(deck.createdAt)}
-                    </span>
-                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                      {deckLectureTitles(deck)}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${deck.title}`}
-                    className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-                    disabled={deletingId === deck.id}
-                    onClick={() => handleDelete(deck.id)}
-                  >
-                    {deletingId === deck.id ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="size-3.5" />
+              {decks.map((deck) => {
+                const title = getLectureTitle(deck.materialIds, materials, deck.title);
+                return (
+                  <div
+                    key={deck.id}
+                    className={cn(
+                      "group flex items-start gap-1 rounded-xl p-1.5 transition-colors",
+                      activeDeck?.deck.id === deck.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
                     )}
-                  </button>
-                </div>
-              ))}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => openDeck(deck.id)}
+                      className="min-w-0 flex-1 rounded-lg p-1.5 text-left"
+                    >
+                      <span className="block truncate text-sm font-semibold">{title}</span>
+                      <span className="mt-1 block truncate text-xs font-normal text-muted-foreground">
+                        Flashcards · {deck.cardCount} cards · {formatDateTime12(deck.createdAt)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${title}`}
+                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                      disabled={deletingId === deck.id}
+                      onClick={() => handleDelete(deck.id)}
+                    >
+                      {deletingId === deck.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-3.5" />
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
@@ -1264,9 +1292,11 @@ function FlashcardsTab({
             <Card className="gap-0 rounded-2xl border-border p-6 shadow-soft">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{activeDeck.deck.title}</p>
+                  <p className="truncate text-sm font-semibold">
+                    {getLectureTitle(activeDeck.deck.materialIds, materials, activeDeck.deck.title)}
+                  </p>
                   <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {deckLectureTitles(activeDeck.deck)}
+                    Flashcards · {activeDeck.cards.length} cards · {formatDateTime12(activeDeck.deck.createdAt)}
                   </p>
                 </div>
                 <span
@@ -1423,13 +1453,6 @@ function QuizTab({
         ? selectedMaterialIds.filter((selectedId) => selectedId !== id)
         : [...selectedMaterialIds, id],
     );
-
-  const quizMaterialsTitle = (quiz: Quiz) => {
-    const names = quiz.materialIds
-      .map((id) => materials.find((m) => m.id === id)?.fileName)
-      .filter((name): name is string => Boolean(name));
-    return names.length ? names.join(", ") : `${quiz.materialIds.length} lecture(s)`;
-  };
 
   const handleGenerate = async () => {
     if (!selectedMaterialIds.length) {
@@ -1639,42 +1662,42 @@ function QuizTab({
               Previous quizzes
             </p>
             <div className="space-y-1">
-              {quizzes.map((quiz) => (
-                <div
-                  key={quiz.id}
-                  className={cn(
-                    "group flex items-start gap-1 rounded-xl p-1.5 transition-colors",
-                    activeQuiz?.quiz.id === quiz.id ? "bg-primary-soft" : "hover:bg-muted",
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => openQuiz(quiz.id)}
-                    className="min-w-0 flex-1 rounded-lg p-1.5 text-left"
-                  >
-                    <span className="block truncate text-sm font-semibold">{quiz.title}</span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">
-                      {quiz.questionCount} questions · {formatTimestamp(quiz.createdAt)}
-                    </span>
-                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                      {quizMaterialsTitle(quiz)}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${quiz.title}`}
-                    className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-                    disabled={deletingId === quiz.id}
-                    onClick={() => handleDelete(quiz.id)}
-                  >
-                    {deletingId === quiz.id ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="size-3.5" />
+              {quizzes.map((quiz) => {
+                const title = getLectureTitle(quiz.materialIds, materials, quiz.title);
+                return (
+                  <div
+                    key={quiz.id}
+                    className={cn(
+                      "group flex items-start gap-1 rounded-xl p-1.5 transition-colors",
+                      activeQuiz?.quiz.id === quiz.id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
                     )}
-                  </button>
-                </div>
-              ))}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => openQuiz(quiz.id)}
+                      className="min-w-0 flex-1 rounded-lg p-1.5 text-left"
+                    >
+                      <span className="block truncate text-sm font-semibold">{title}</span>
+                      <span className="mt-1 block truncate text-xs font-normal text-muted-foreground">
+                        Quiz · {quiz.questionCount} questions · {formatDateTime12(quiz.createdAt)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${title}`}
+                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                      disabled={deletingId === quiz.id}
+                      onClick={() => handleDelete(quiz.id)}
+                    >
+                      {deletingId === quiz.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-3.5" />
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
@@ -1843,10 +1866,11 @@ function QuizTab({
             </Card>
           ) : (
             <Card className="gap-0 rounded-2xl border-border p-6 shadow-soft">
-              <h2 className="text-lg font-semibold">{activeQuiz.quiz.title}</h2>
+              <h2 className="text-lg font-semibold">
+                {getLectureTitle(activeQuiz.quiz.materialIds, materials, activeQuiz.quiz.title)}
+              </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {activeQuiz.quiz.questionCount} questions · {quizMaterialsTitle(activeQuiz.quiz)} ·
-                Created {formatTimestamp(activeQuiz.quiz.createdAt)}
+                Quiz · {activeQuiz.questions.length} questions · {formatDateTime12(activeQuiz.quiz.createdAt)}
               </p>
               {lastAttempt && (
                 <div className="mt-4 rounded-xl bg-primary-soft/60 p-4 text-sm">
