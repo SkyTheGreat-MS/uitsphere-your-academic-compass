@@ -101,10 +101,10 @@ export function Topbar() {
               <img
                 src="/UIT-Logo-big.png"
                 alt="University of Information Technology"
-                className="size-9 shrink-0 object-contain"
+                className="size-12 shrink-0 object-contain"
               />
               <div className="min-w-0">
-                <p className="truncate font-display text-base font-bold">Ma-Haw-Tha-Dar</p>
+                <p className="truncate font-display text-base font-bold leading-tight">Ma-Haw-Tha-Dar</p>
                 <p className="truncate text-[11px] text-muted-foreground">Student companion</p>
               </div>
             </div>

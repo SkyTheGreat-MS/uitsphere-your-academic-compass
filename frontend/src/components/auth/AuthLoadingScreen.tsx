@@ -11,7 +11,7 @@ export function AuthLoadingScreen({
         <img
           src="/UIT-Logo-big.png"
           alt="University of Information Technology"
-          className="size-16 object-contain animate-pulse"
+          className="size-20 object-contain animate-pulse"
         />
         <div>
           <h2 className="font-display text-lg font-bold tracking-tight">Ma-Haw-Tha-Dar</h2>

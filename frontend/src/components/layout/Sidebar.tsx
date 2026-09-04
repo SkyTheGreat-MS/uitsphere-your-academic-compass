@@ -41,15 +41,15 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
         collapsed ? "w-[76px]" : "w-[264px]",
       )}
     >
-      <div className="flex h-16 items-center gap-3 px-4">
+      <div className={cn("flex h-16 items-center gap-3 px-4", collapsed && "justify-center px-0")}>
         <img
           src="/UIT-Logo-big.png"
           alt="University of Information Technology"
-          className="size-9 shrink-0 object-contain"
+          className="size-12 shrink-0 object-contain"
         />
         {!collapsed && (
           <div className="min-w-0">
-            <p className="truncate font-display text-base font-bold">Ma-Haw-Tha-Dar</p>
+            <p className="truncate font-display text-base font-bold leading-tight">Ma-Haw-Tha-Dar</p>
             <p className="truncate text-[11px] text-muted-foreground">Student companion</p>
           </div>
         )}

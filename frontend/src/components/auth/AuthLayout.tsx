@@ -32,11 +32,11 @@ export function AuthLayout({
           className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-primary-foreground/10 blur-3xl"
         />
 
-        <Link to="/" className="relative flex items-center gap-3 text-primary-foreground">
+        <Link to="/" className="relative flex items-center gap-3.5 text-primary-foreground">
           <img
             src="/UIT-Logo-big.png"
             alt="University of Information Technology"
-            className="size-10 shrink-0 object-contain drop-shadow-sm"
+            className="size-14 shrink-0 object-contain drop-shadow-sm"
           />
           <span className="font-display text-xl font-bold">Ma-Haw-Tha-Dar</span>
         </Link>
@@ -83,11 +83,11 @@ export function AuthLayout({
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          <Link to="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
+          <Link to="/" className="mb-8 flex items-center gap-3 lg:hidden">
             <img
               src="/UIT-Logo-big.png"
               alt="University of Information Technology"
-              className="size-9 shrink-0 object-contain"
+              className="size-12 shrink-0 object-contain"
             />
             <span className="font-display text-lg font-bold">Ma-Haw-Tha-Dar</span>
           </Link>
