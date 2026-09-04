@@ -97,7 +97,18 @@ export function Topbar() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[260px] p-0">
-            <nav className="space-y-1 p-4 pt-14">
+            <div className="flex h-16 items-center gap-3 border-b border-border px-4">
+              <img
+                src="/UIT-Logo-big.png"
+                alt="University of Information Technology"
+                className="size-9 shrink-0 object-contain"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-display text-base font-bold">Ma-Haw-Tha-Dar</p>
+                <p className="truncate text-[11px] text-muted-foreground">Student companion</p>
+              </div>
+            </div>
+            <nav className="space-y-1 p-4 pt-4">
               {navItems.map((item) => (
                 <Link
                   key={item.to}

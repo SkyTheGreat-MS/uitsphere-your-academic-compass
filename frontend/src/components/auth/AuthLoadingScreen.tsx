@@ -1,4 +1,4 @@
-import { GraduationCap, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export function AuthLoadingScreen({
   message = "Checking your session...",
@@ -8,9 +8,11 @@ export function AuthLoadingScreen({
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-4">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="grid size-14 place-items-center rounded-2xl gradient-brand text-primary-foreground shadow-glow animate-pulse">
-          <GraduationCap className="size-7" />
-        </div>
+        <img
+          src="/UIT-Logo-big.png"
+          alt="University of Information Technology"
+          className="size-16 object-contain animate-pulse"
+        />
         <div>
           <h2 className="font-display text-lg font-bold tracking-tight">Ma-Haw-Tha-Dar</h2>
           <p className="text-xs text-muted-foreground">Student Companion</p>

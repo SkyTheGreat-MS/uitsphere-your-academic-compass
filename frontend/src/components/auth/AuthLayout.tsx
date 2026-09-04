@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { GraduationCap, Sparkles, CalendarCheck, BrainCircuit } from "lucide-react";
+import { Sparkles, CalendarCheck, BrainCircuit } from "lucide-react";
 
 const highlights = [
   { icon: BrainCircuit, title: "AI Learning Studio", body: "Turn any lecture into summaries, notes, flashcards and quizzes." },
@@ -33,9 +33,11 @@ export function AuthLayout({
         />
 
         <Link to="/" className="relative flex items-center gap-3 text-primary-foreground">
-          <span className="grid size-11 place-items-center rounded-xl bg-primary-foreground/15">
-            <GraduationCap className="size-6" />
-          </span>
+          <img
+            src="/UIT-Logo-big.png"
+            alt="University of Information Technology"
+            className="size-10 shrink-0 object-contain drop-shadow-sm"
+          />
           <span className="font-display text-xl font-bold">Ma-Haw-Tha-Dar</span>
         </Link>
 
@@ -81,10 +83,12 @@ export function AuthLayout({
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          <Link to="/" className="mb-8 flex items-center gap-2 lg:hidden">
-            <span className="grid size-9 place-items-center rounded-xl gradient-brand text-primary-foreground">
-              <GraduationCap className="size-5" />
-            </span>
+          <Link to="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
+            <img
+              src="/UIT-Logo-big.png"
+              alt="University of Information Technology"
+              className="size-9 shrink-0 object-contain"
+            />
             <span className="font-display text-lg font-bold">Ma-Haw-Tha-Dar</span>
           </Link>
           <h1 className="text-2xl font-bold">{title}</h1>

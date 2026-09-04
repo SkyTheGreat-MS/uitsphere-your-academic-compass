@@ -6,7 +6,6 @@ import {
   ListChecks,
   PackageSearch,
   UserRound,
-  GraduationCap,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -43,9 +42,11 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       )}
     >
       <div className="flex h-16 items-center gap-3 px-4">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl gradient-brand text-primary-foreground">
-          <GraduationCap className="size-5" />
-        </div>
+        <img
+          src="/UIT-Logo-big.png"
+          alt="University of Information Technology"
+          className="size-9 shrink-0 object-contain"
+        />
         {!collapsed && (
           <div className="min-w-0">
             <p className="truncate font-display text-base font-bold">Ma-Haw-Tha-Dar</p>
