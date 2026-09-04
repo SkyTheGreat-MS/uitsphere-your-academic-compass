@@ -54,7 +54,7 @@ export function getLectureTitle(
     }
 
     const cleanNames = foundMaterials
-      .map((m) => cleanLectureName(m.title || m.fileName))
+      .map((m) => cleanLectureName(m.fileName))
       .filter(Boolean);
 
     const missingCount = ids.length - foundMaterials.length;

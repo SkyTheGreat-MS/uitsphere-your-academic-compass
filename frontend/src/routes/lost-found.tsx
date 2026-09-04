@@ -80,6 +80,8 @@ export type LostFoundSearch = {
   postId?: number;
 };
 
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
 export const Route = createFileRoute("/lost-found")({
   validateSearch: (search: Record<string, unknown>): LostFoundSearch => {
     return {
@@ -119,7 +121,11 @@ export const Route = createFileRoute("/lost-found")({
       },
     ],
   }),
-  component: LostFoundPage,
+  component: () => (
+    <ProtectedRoute>
+      <LostFoundPage />
+    </ProtectedRoute>
+  ),
 });
 
 const lostFoundCategories = ["All", "Electronics", "Documents", "Academic", "Personal", "Clothing"];
@@ -969,7 +975,7 @@ function LostFoundPage() {
         </div>
       )}
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={(val) => setTab(val as any)}>
         <TabsList className="rounded-xl">
           <TabsTrigger value="lost" className="rounded-lg">
             Lost items

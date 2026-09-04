@@ -43,6 +43,8 @@ import { useAuth, type Student } from "@/context/AuthContext";
 import { removeAvatar, updateStudent as saveStudent, uploadAvatar } from "@/api/studentApi";
 import { getDashboard } from "@/api/dashboardApi";
 import { activityTool, formatWhen } from "@/lib/activity";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthLoadingScreen } from "@/components/auth/AuthLoadingScreen";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -60,7 +62,11 @@ export const Route = createFileRoute("/profile")({
       },
     ],
   }),
-  component: ProfilePage,
+  component: () => (
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  ),
 });
 
 const iconMap = {
@@ -82,6 +88,7 @@ function ProfilePage() {
   const { data: dashboard } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => getDashboard(),
+    enabled: Boolean(student),
     staleTime: 60_000,
   });
 
@@ -90,13 +97,7 @@ function ProfilePage() {
   }, [student]);
 
   if (isLoading || !student) {
-    return (
-      <AppShell>
-        <div className="flex min-h-[240px] items-center justify-center text-sm text-muted-foreground">
-          Loading student information...
-        </div>
-      </AppShell>
-    );
+    return <AuthLoadingScreen message="Loading student profile..." />;
   }
   const initials =
     student.name

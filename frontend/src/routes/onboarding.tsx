@@ -11,9 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth, type Student } from "@/context/AuthContext";
 import { updateStudent as saveStudent } from "@/api/studentApi";
 
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthLoadingScreen } from "@/components/auth/AuthLoadingScreen";
+
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Student profile setup — Ma-Haw-Tha-Dar" }] }),
-  component: OnboardingPage,
+  component: () => (
+    <ProtectedRoute>
+      <OnboardingPage />
+    </ProtectedRoute>
+  ),
 });
 
 const departments = ["Software Engineering", "Knowledge Engineering", "High Performance Computing", "Cybersecurity", "Electrical Engineering", "Business Information Systems"];
@@ -30,7 +37,9 @@ function OnboardingPage() {
     if (student) setForm(student);
   }, [student]);
 
-  if (isLoading || !student) return <AuthLayout title="Loading your profile" subtitle="Getting your account ready."><div className="py-8 text-center text-sm text-muted-foreground">Loading student information...</div></AuthLayout>;
+  if (isLoading || !student) {
+    return <AuthLoadingScreen message="Loading student profile..." />;
+  }
 
   const set = (updates: Partial<Student>) => setForm((current) => ({ ...current, ...updates }));
   const save = async (event: React.FormEvent) => {

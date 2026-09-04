@@ -80,6 +80,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { MarkdownContent } from "@/components/common/MarkdownContent";
 import { cn } from "@/lib/utils";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export const Route = createFileRoute("/studio")({
   head: () => ({
@@ -97,7 +98,11 @@ export const Route = createFileRoute("/studio")({
       },
     ],
   }),
-  component: StudioPage,
+  component: () => (
+    <ProtectedRoute>
+      <StudioPage />
+    </ProtectedRoute>
+  ),
 });
 
 function axiosErrorMessage(error: unknown) {

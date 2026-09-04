@@ -10,8 +10,12 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { loginStudent } from "@/api/authApi";
 import { useAuth } from "@/context/AuthContext";
+import { PublicOnlyRoute } from "@/components/auth/PublicOnlyRoute";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Ma-Haw-Tha-Dar Student Companion" },
@@ -27,14 +31,21 @@ export const Route = createFileRoute("/login")({
       },
     ],
   }),
-  component: LoginPage,
+  component: () => (
+    <PublicOnlyRoute>
+      <LoginPage />
+    </PublicOnlyRoute>
+  ),
 });
 
 function LoginPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <AuthLayout
@@ -53,27 +64,32 @@ function LoginPage() {
         className="space-y-5"
         onSubmit={async (e) => {
           e.preventDefault();
+          if (isSubmitting) return;
+          setIsSubmitting(true);
 
           try {
             const data = await loginStudent(email, password);
 
             if (data.success && data.token) {
-              await login(data.token);
+              await login(data.token, rememberMe);
 
               toast.success("Signed in", {
-                description: `Welcome back, ${data.student?.name}.`,
+                description: `Welcome back, ${data.student?.name || "Student"}.`,
               });
 
-              navigate({ to: "/" });
+              const target = search.redirect && search.redirect.startsWith("/") ? search.redirect : "/";
+              navigate({ to: target as any });
             } else {
               toast.error("Login failed", {
-                description: data.message,
+                description: data.message || "Invalid email or password.",
               });
             }
           } catch (error) {
             toast.error("Login failed", {
               description: "Invalid email or password.",
             });
+          } finally {
+            setIsSubmitting(false);
           }
         }}
       >
@@ -86,6 +102,8 @@ function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@mahawthadar.edu"
+              required
               className="h-11 rounded-xl pl-9"
             />
           </div>
@@ -100,22 +118,27 @@ function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
               className="h-11 rounded-xl pl-9"
             />
           </div>
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Checkbox defaultChecked /> Remember me
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+            <Checkbox
+              checked={rememberMe}
+              onCheckedChange={(val) => setRememberMe(Boolean(val))}
+            />{" "}
+            Remember me
           </label>
           <button type="button" className="text-sm font-medium text-primary hover:underline">
             Forgot password?
           </button>
         </div>
 
-        <Button type="submit" size="lg" className="h-11 w-full rounded-xl">
-          Sign in <ArrowRight className="size-4" />
+        <Button type="submit" size="lg" className="h-11 w-full rounded-xl" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Sign in"} {!isSubmitting && <ArrowRight className="size-4" />}
         </Button>
 
         <div className="flex items-center gap-3">

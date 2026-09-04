@@ -74,6 +74,7 @@ import {
   type UnifiedPlannerEvent,
 } from "@/lib/planner";
 import { cn } from "@/lib/utils";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export const Route = createFileRoute("/planner")({
   head: () => ({
@@ -91,7 +92,11 @@ export const Route = createFileRoute("/planner")({
       },
     ],
   }),
-  component: PlannerPage,
+  component: () => (
+    <ProtectedRoute>
+      <PlannerPage />
+    </ProtectedRoute>
+  ),
 });
 
 function PlannerPage() {

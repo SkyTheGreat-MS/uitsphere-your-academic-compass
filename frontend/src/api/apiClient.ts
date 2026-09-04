@@ -5,7 +5,10 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
+  const token =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("token") || localStorage.getItem("token")
+      : null;
   const method = config.method?.toLowerCase();
   const isPublicAuthRequest =
     method === "post" && (config.url === "/students" || config.url === "/students/login");
@@ -28,6 +31,8 @@ apiClient.interceptors.response.use(
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("student");
+        localStorage.removeItem("token");
+        localStorage.removeItem("student");
         window.dispatchEvent(new Event("auth:unauthorized"));
       }
     }

@@ -9,8 +9,18 @@ import { Card } from "@/components/ui/card";
 import { getTimetable, importTimetable, type TimetableEntry } from "@/api/timetableApi";
 import { formatTime12, formatTimeRange12 } from "@/lib/date";
 import { toast } from "sonner";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-export const Route = createFileRoute("/timetable")({ component: TimetablePage });
+export const Route = createFileRoute("/timetable")({
+  head: () => ({
+    meta: [{ title: "Timetable — Ma-Haw-Tha-Dar" }],
+  }),
+  component: () => (
+    <ProtectedRoute>
+      <TimetablePage />
+    </ProtectedRoute>
+  ),
+});
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const;
 const hours = ["08:30", "09:40", "10:50", "11:50", "12:40", "13:50", "15:00", "16:00"];
 const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));

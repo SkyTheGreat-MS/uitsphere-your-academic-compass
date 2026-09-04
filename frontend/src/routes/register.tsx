@@ -37,6 +37,8 @@ const academicYears = [
 
 const batches = ["9", "10", "11", "12", "13"] as const;
 
+import { PublicOnlyRoute } from "@/components/auth/PublicOnlyRoute";
+
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
@@ -46,7 +48,11 @@ export const Route = createFileRoute("/register")({
       { property: "og:description", content: "Join Ma-Haw-Tha-Dar, the AI-powered university student companion platform." },
     ],
   }),
-  component: RegisterPage,
+  component: () => (
+    <PublicOnlyRoute>
+      <RegisterPage />
+    </PublicOnlyRoute>
+  ),
 });
 
 function RegisterPage() {

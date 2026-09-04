@@ -30,6 +30,9 @@ import { formatMinutesUntil, getTimetableState, timeToMinutes } from "@/lib/time
 import { formatTime12 } from "@/lib/date";
 import { activityTool, formatWhen } from "@/lib/activity";
 
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthLoadingScreen } from "@/components/auth/AuthLoadingScreen";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -46,7 +49,11 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: DashboardPage,
+  component: () => (
+    <ProtectedRoute>
+      <DashboardPage />
+    </ProtectedRoute>
+  ),
 });
 
 const quickActions = [
@@ -103,21 +110,24 @@ function DashboardPage() {
   } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => getDashboard(),
+    enabled: Boolean(student),
     staleTime: 60_000,
   });
   const { data: recentLost = [] } = useQuery({
     queryKey: ["lost-found", "browse", "LOST", "All", ""],
     queryFn: () => browseLostFound({ type: "LOST" }),
+    enabled: Boolean(student),
     staleTime: 30_000,
   });
   useEffect(() => {
+    if (!student) return;
     getTimetable()
       .then(setTimetable)
       .catch(() => setTimetable([]));
-  }, []);
+  }, [student]);
   useEffect(() => {
     const onFocus = () => {
-      if (document.visibilityState === "visible") void refetchDashboard();
+      if (document.visibilityState === "visible" && student) void refetchDashboard();
     };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
@@ -125,7 +135,7 @@ function DashboardPage() {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
     };
-  }, [refetchDashboard]);
+  }, [refetchDashboard, student]);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
@@ -139,13 +149,7 @@ function DashboardPage() {
   }).format(now);
 
   if (isLoading || !student) {
-    return (
-      <AppShell>
-        <div className="flex min-h-[240px] items-center justify-center text-sm text-muted-foreground">
-          Loading student information...
-        </div>
-      </AppShell>
-    );
+    return <AuthLoadingScreen message="Checking your session..." />;
   }
 
   const quizStats = dashboard?.quizStats;

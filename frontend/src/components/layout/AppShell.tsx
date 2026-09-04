@@ -2,25 +2,28 @@ import { useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar />
-        <motion.main
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="flex-1 px-4 py-6 lg:px-8 lg:py-8"
-        >
-          {children}
-        </motion.main>
+    <ProtectedRoute>
+      <div className="flex min-h-screen w-full bg-background">
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar />
+          <motion.main
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="flex-1 px-4 py-6 lg:px-8 lg:py-8"
+          >
+            {children}
+          </motion.main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
 
