@@ -148,7 +148,7 @@ function RegisterPage() {
             <Label htmlFor="uid">University ID</Label>
             <div className="relative">
               <IdCard className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="uid" value={form.universityId} onChange={updateField("universityId")} placeholder="TTNT-1234" required className="h-11 rounded-xl pl-9" />
+              <Input id="uid" value={form.universityId} onChange={updateField("universityId")} placeholder="TNT-1234" required className="h-11 rounded-xl pl-9" />
             </div>
           </div>
           <div className="space-y-2">
