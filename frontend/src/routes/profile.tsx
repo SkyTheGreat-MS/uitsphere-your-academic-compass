@@ -13,7 +13,6 @@ import {
   Bell,
   Moon,
   ShieldCheck,
-  Download,
   Sparkles,
   Upload,
   Trash2,
@@ -38,8 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { achievements } from "@/data/campus";
 import { useAuth, type Student } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
 import { removeAvatar, updateStudent as saveStudent, uploadAvatar } from "@/api/studentApi";
 import { getDashboard } from "@/api/dashboardApi";
 import { activityTool, formatWhen } from "@/lib/activity";
@@ -53,12 +52,12 @@ export const Route = createFileRoute("/profile")({
       {
         name: "description",
         content:
-          "Manage your student details, view achievements, study statistics and recent learning activity.",
+          "Manage your student details, view study statistics and recent learning activity.",
       },
       { property: "og:title", content: "Student profile — Ma-Haw-Tha-Dar" },
       {
         property: "og:description",
-        content: "Achievements, study stats and settings for your Ma-Haw-Tha-Dar account.",
+        content: "Study statistics, milestones and settings for your Ma-Haw-Tha-Dar account.",
       },
     ],
   }),
@@ -68,15 +67,6 @@ export const Route = createFileRoute("/profile")({
     </ProtectedRoute>
   ),
 });
-
-const iconMap = {
-  flame: Flame,
-  trophy: Trophy,
-  target: Target,
-  notebook: NotebookPen,
-  sunrise: Sunrise,
-  heart: Heart,
-};
 
 function ProfilePage() {
   const { student, isLoading, updateStudent } = useAuth();
@@ -133,6 +123,77 @@ function ProfilePage() {
     ["Quizzes completed", studyOverview?.quizzesCompleted],
     ["Study streak", studyOverview?.currentStreak],
   ] as const;
+
+  const streakCount = studyOverview?.currentStreak ?? 0;
+  const quizCount = studyOverview?.quizzesCompleted ?? 0;
+  const noteCount = studyOverview?.smartNotes ?? 0;
+  const deckCount = studyOverview?.flashcardDecks ?? 0;
+  const materialCount = studyOverview?.learningMaterials ?? 0;
+  const summaryCount = studyOverview?.summaries ?? 0;
+
+  const milestones = [
+    {
+      id: "streak",
+      title: streakCount >= 3 ? `${streakCount}-day streak` : "Study streak",
+      description:
+        streakCount >= 3
+          ? `Maintained a ${streakCount}-day active streak`
+          : "Study 3 days in a row to start a streak",
+      icon: Flame,
+      unlocked: streakCount >= 3,
+    },
+    {
+      id: "quiz",
+      title: "Quiz master",
+      description:
+        quizCount >= 5
+          ? `Completed ${quizCount} AI quizzes`
+          : `${quizCount} of 5 quizzes completed`,
+      icon: Trophy,
+      unlocked: quizCount >= 5,
+    },
+    {
+      id: "materials",
+      title: "Course explorer",
+      description:
+        materialCount >= 1
+          ? `Uploaded ${materialCount} ${materialCount === 1 ? "lecture" : "lectures"}`
+          : "Upload your first lecture material",
+      icon: Target,
+      unlocked: materialCount >= 1,
+    },
+    {
+      id: "notes",
+      title: "Note architect",
+      description:
+        noteCount >= 1
+          ? `Generated ${noteCount} smart note sets`
+          : "Generate smart notes with AI",
+      icon: NotebookPen,
+      unlocked: noteCount >= 1,
+    },
+    {
+      id: "decks",
+      title: "Deck scholar",
+      description:
+        deckCount >= 1
+          ? `Created ${deckCount} flashcard decks`
+          : "Create flashcards from lectures",
+      icon: Sunrise,
+      unlocked: deckCount >= 1,
+    },
+    {
+      id: "summary",
+      title: "Core summarizer",
+      description:
+        summaryCount >= 1
+          ? `Generated ${summaryCount} lecture summaries`
+          : "Summarize a lecture with AI",
+      icon: Heart,
+      unlocked: summaryCount >= 1,
+    },
+  ];
+  const unlockedMilestones = milestones.filter((m) => m.unlocked).length;
 
   const handleAvatarPick = (file?: File) => {
     if (!file) return;
@@ -428,23 +489,46 @@ function ProfilePage() {
       </div>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-3">
-        <SectionCard title="Achievements" description="6 of 18 unlocked" className="xl:col-span-2">
+        <SectionCard
+          title="Study milestones"
+          description={`${unlockedMilestones} of ${milestones.length} unlocked`}
+          className="xl:col-span-2"
+        >
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {achievements.map((a, i) => {
-              const Icon = iconMap[a.icon as keyof typeof iconMap];
+            {milestones.map((m, i) => {
+              const Icon = m.icon;
               return (
                 <motion.div
-                  key={a.id}
+                  key={m.id}
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.05, duration: 0.3 }}
-                  className="hover-lift rounded-xl border border-border p-4 text-center"
+                  className={cn(
+                    "hover-lift rounded-xl border p-4 text-center transition-colors",
+                    m.unlocked
+                      ? "border-primary/30 bg-primary/5"
+                      : "border-border bg-muted/20 opacity-60",
+                  )}
                 >
-                  <span className="mx-auto grid size-11 place-items-center rounded-xl bg-primary-soft text-primary">
+                  <span
+                    className={cn(
+                      "mx-auto grid size-11 place-items-center rounded-xl",
+                      m.unlocked
+                        ? "bg-primary-soft text-primary"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
                     <Icon className="size-5" />
                   </span>
-                  <p className="mt-3 text-sm font-semibold">{a.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{a.description}</p>
+                  <div className="mt-3 flex items-center justify-center gap-1.5">
+                    <p className="text-sm font-semibold">{m.title}</p>
+                    {m.unlocked && (
+                      <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                        Unlocked
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{m.description}</p>
                 </motion.div>
               );
             })}

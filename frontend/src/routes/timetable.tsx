@@ -140,7 +140,7 @@ function TimetablePage() {
     <AppShell>
       <PageHeader
         title="Timetable"
-        description="Second Year (Section A) · Semester IV · 28 scheduled sessions"
+        description={`Second Year (Section A) · Semester IV · ${timetable.length} scheduled ${timetable.length === 1 ? "session" : "sessions"}`}
         actions={
           <>
             <input

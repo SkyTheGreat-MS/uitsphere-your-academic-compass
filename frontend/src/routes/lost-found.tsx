@@ -71,7 +71,7 @@ import {
   type LostFoundClaim,
   type LostFoundPost,
 } from "@/api/lostFoundApi";
-import { formatDateTime12, formatTime12 } from "@/lib/date";
+import { formatDateTime12 } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 export type LostFoundSearch = {

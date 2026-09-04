@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   RotateCcw,
   X,
-  BookOpen,
   MessageSquarePlus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -126,12 +125,6 @@ function formatChatTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return formatTime12(date);
-}
-
-function formatTimestamp(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function StudioPage() {
@@ -240,7 +233,7 @@ function StudioContent() {
       await deleteChatSession(id);
       setSessions((current) => current.filter((s) => s.id !== id));
       if (selectedSessionId === id) {
-        setSelectedSessionId((current) => sessions.find((s) => s.id !== id)?.id ?? null);
+        setSelectedSessionId(sessions.find((s) => s.id !== id)?.id ?? null);
       }
       toast.success("Chat deleted");
     } catch (error) {
@@ -466,9 +459,7 @@ function StudioContent() {
           <TabsContent value="tutor" className="mt-4">
             <TutorTab
               key={student?.email ?? "guest"}
-              materials={materials}
               selectedMaterialIds={selectedMaterialIds}
-              onSelectMaterials={setSelectedMaterialIds}
               session={selectedSession}
               onEnsureSession={async () => {
                 if (selectedSessionId !== null) return selectedSessionId;
@@ -520,15 +511,11 @@ function StudioContent() {
 /* ---------------------------------- Tutor --------------------------------- */
 
 function TutorTab({
-  materials,
   selectedMaterialIds,
-  onSelectMaterials,
   session,
   onEnsureSession,
 }: {
-  materials: LearningMaterial[];
   selectedMaterialIds: number[];
-  onSelectMaterials: (ids: number[]) => void;
   session: ChatSession | null;
   onEnsureSession: () => Promise<number>;
 }) {

@@ -157,6 +157,8 @@ function DashboardPage() {
   const studyProgress = dashboard?.studyProgress;
   const classesToday = schedule.today.length;
   const classLabel = classesToday === 1 ? "class" : "classes";
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
     <AppShell>
@@ -177,7 +179,7 @@ function DashboardPage() {
                 {dateLabel}
               </Badge>
               <h1 className="mt-3 text-2xl font-bold lg:text-3xl">
-                Good morning, {student.name?.split(" ")[0]} 👋
+                {greeting}, {student.name?.split(" ")[0]} 👋
               </h1>
               <p className="mt-2 max-w-xl text-sm text-primary-foreground/80">
                 {classesToday > 0

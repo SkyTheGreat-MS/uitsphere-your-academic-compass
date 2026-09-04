@@ -10,8 +10,6 @@ import backend.dto.LoginResponse;
 import backend.dto.UpdateProfileRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/students")
 @CrossOrigin(origins = "http://localhost:8081")

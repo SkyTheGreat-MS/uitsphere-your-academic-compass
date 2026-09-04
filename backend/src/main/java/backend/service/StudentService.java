@@ -1,7 +1,5 @@
 package backend.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import backend.dto.StudentDTO;
 import backend.entity.Student;
 import backend.repository.StudentRepository;

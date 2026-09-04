@@ -1,7 +1,6 @@
 package backend.service;
 
 import backend.dto.ChatMessageRequest;
-import backend.entity.ChatSession;
 import backend.entity.Flashcard;
 import backend.entity.FlashcardDeck;
 import backend.entity.Student;
@@ -19,7 +18,6 @@ import backend.repository.QuizRepository;
 import backend.repository.SmartNoteRepository;
 import backend.repository.StudentRepository;
 import backend.repository.SummaryRepository;
-import backend.dto.ClaimResponse;
 import backend.entity.ClaimStatus;
 import backend.entity.LostFoundClaim;
 import backend.entity.LostFoundPost;
